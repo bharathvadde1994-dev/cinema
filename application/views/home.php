@@ -1,197 +1,161 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KinoBlick Cinema</title>
-    <link rel="stylesheet" href="<?php echo base_url('assets/css/home.css'); ?>">
-</head>
-<body>
-    <div class="page-shell">
-        <header class="topbar">
-            <div class="brand">
-                <span class="brand-mark">KINO</span><span class="brand-accent">BLICK</span>
-            </div>
-            <nav class="nav">
-                <a href="#features">Why Us</a>
-                <a href="#releases">Now Showing</a>
-                <a href="#business">Business</a>
-                <a href="#contact">Contact</a>
-            </nav>
-            <a class="nav-cta" href="#book">Book Screen</a>
-        </header>
-
-        <main>
-            <section class="hero">
-                <div class="hero-copy">
-                    <p class="eyebrow">Cinema booking and promo spaces</p>
-                    <h1>We Create Your Cinema Ad. You Choose the Screen.</h1>
-                    <p class="hero-text">
-                        Launch film nights, private screenings, and local promotions from one polished booking flow.
-                    </p>
-                    <div class="hero-actions">
-                        <a class="button button-light" href="#book">Start Booking</a>
-                        <a class="button button-ghost" href="#releases">Browse Movies</a>
-                    </div>
-                </div>
-                <div class="hero-badge">
-                    <span>T</span>
-                </div>
-            </section>
-
-            <section class="search-panel" id="book">
-                <div class="search-header">
-                    <p class="section-kicker">What You Need To Upload To Your Ad</p>
-                    <p class="section-note">Pick your city, date, and preferred screen to start a booking request.</p>
-                </div>
-                <form class="search-form">
-                    <label>
-                        <span>City</span>
-                        <input type="text" placeholder="Rome">
-                    </label>
-                    <label>
-                        <span>Date</span>
-                        <input type="date">
-                    </label>
-                    <label>
-                        <span>Screen Type</span>
-                        <select>
-                            <option>Premium Hall</option>
-                            <option>Classic Hall</option>
-                            <option>Private Event</option>
-                        </select>
-                    </label>
-                    <button type="submit">Search Now</button>
-                </form>
-            </section>
-
-            <section class="service-grid" id="features">
-                <article class="service-card service-dark">
-                    <p class="pill">Upload</p>
-                    <h2>Launch Your Campaign</h2>
-                    <p>Submit artwork, promo video, or event copy and let the cinema screen it with your chosen slot.</p>
-                </article>
-                <article class="service-card">
-                    <p class="pill pill-soft">Cafe &amp; Coffee Breaks</p>
-                    <ul class="feature-list">
-                        <li>Morning matinee packages with snack bundles</li>
-                        <li>Late night screening blocks for special events</li>
-                        <li>Flexible seat plans for family and student bookings</li>
-                        <li>Weekly featured-screen promotions</li>
-                    </ul>
-                </article>
-            </section>
-
-            <section class="workflow">
-                <h2>How KinoBlick Works</h2>
-                <div class="workflow-grid">
-                    <article>
-                        <strong>1</strong>
-                        <h3>Select your cinema</h3>
-                        <p>Browse available venues, screen sizes, and prime-time slots.</p>
-                    </article>
-                    <article>
-                        <strong>2</strong>
-                        <h3>Choose ad or screening</h3>
-                        <p>Book a promo spot, brand activation, or private movie session.</p>
-                    </article>
-                    <article>
-                        <strong>3</strong>
-                        <h3>Book &amp; relax</h3>
-                        <p>Confirm your request and receive a clean booking summary instantly.</p>
-                    </article>
-                </div>
-            </section>
-
-            <section class="stats">
-                <article>
-                    <strong>1000+</strong>
-                    <span>Seats across partner halls</span>
-                </article>
-                <article>
-                    <strong>50+</strong>
-                    <span>Campaign launches each month</span>
-                </article>
-                <article>
-                    <strong>15m</strong>
-                    <span>Average booking confirmation time</span>
-                </article>
-                <article>
-                    <strong>20+</strong>
-                    <span>Curated film and event formats</span>
-                </article>
-            </section>
-
-            <section class="releases" id="releases">
-                <div class="section-heading">
-                    <p class="section-kicker">Now Showing In Cinemas</p>
-                    <a href="#book">View full catalogue</a>
-                </div>
-                <div class="poster-strip">
-                    <article class="poster poster-a">
-                        <span>Shadow Run</span>
-                    </article>
-                    <article class="poster poster-b">
-                        <span>Empire Tide</span>
-                    </article>
-                    <article class="poster poster-c">
-                        <span>Glass Signal</span>
-                    </article>
-                </div>
-            </section>
-
-            <section class="business" id="business">
-                <div class="business-copy">
-                    <p class="section-kicker">Why Choose Us</p>
-                    <h2>Your Class Is Our Advertising</h2>
-                    <p>
-                        Built for local businesses, event organizers, and film lovers who want a booking page that looks finished from day one.
-                    </p>
-                </div>
-                <div class="business-grid">
-                    <article>
-                        <h3>Powerful analytics</h3>
-                        <p>Track campaign requests, hall performance, and booking demand from one place.</p>
-                    </article>
-                    <article>
-                        <h3>Fast screening setup</h3>
-                        <p>Reusable booking components keep operations consistent across halls.</p>
-                    </article>
-                    <article>
-                        <h3>Transparent pricing</h3>
-                        <p>Display clear packages for ad slots, events, and private screenings.</p>
-                    </article>
-                    <article>
-                        <h3>Reliable support</h3>
-                        <p>Give customers a direct path to confirm dates, assets, and special requests.</p>
-                    </article>
-                </div>
-            </section>
-
-            <section class="cta-band">
-                <p class="section-kicker">Ready to promote your business on the big screen?</p>
-                <h2>Advertise your brand, host a premiere, or reserve a cinema hall in minutes.</h2>
+<main>
+    <section class="hero-banner hero-banner-home">
+        <div class="content-shell hero-shell">
+            <div class="hero-copy">
+                <span class="eyebrow">Cinema ad inventory marketplace</span>
+                <h1>Sell cinema ad slots online across your client’s full network.</h1>
+                <p>
+                    Advertisers can browse available cinemas, choose a 3 or 6 month run,
+                    set ad duration, see live pricing, pay online, upload media, and manage
+                    every booking from one account.
+                </p>
                 <div class="hero-actions">
-                    <a class="button button-light" href="#book">Get Started</a>
-                    <a class="button button-ghost button-ghost-light" href="#contact">Talk to sales</a>
+                    <a class="header-button" href="<?php echo site_url('booking'); ?>">Build a booking</a>
+                    <a class="ghost-button" href="<?php echo site_url('cinemas'); ?>">Explore cinemas</a>
                 </div>
-            </section>
-        </main>
+            </div>
+            <div class="hero-panel">
+                <h2>Platform Scope</h2>
+                <ul class="bullet-list">
+                    <li>Map-based cinema discovery</li>
+                    <li>Duration and ad-length pricing logic</li>
+                    <li>Checkout, booking summary, and uploads</li>
+                    <li>Customer and admin dashboards</li>
+                </ul>
+            </div>
+        </div>
+        <div class="seat-overlay"></div>
+    </section>
 
-        <footer class="footer" id="contact">
-            <div>
-                <div class="brand footer-brand">
-                    <span class="brand-mark">KINO</span><span class="brand-accent">BLICK</span>
+    <section class="overview-section">
+        <div class="content-shell">
+            <div class="section-heading-row">
+                <div>
+                    <span class="section-tag">Business Model</span>
+                    <h2>Main structure for the website</h2>
                 </div>
-                <p>Smart booking flow for cinema advertising and private screenings.</p>
+                <p class="section-lead">
+                    This scaffold is built around the actual commercial flow: inventory discovery,
+                    booking, payment, upload handling, and admin operations.
+                </p>
             </div>
-            <div class="footer-links">
-                <a href="#features">Features</a>
-                <a href="#releases">Movies</a>
-                <a href="#business">Business</a>
-                <a href="#book">Booking</a>
+
+            <div class="feature-grid">
+                <article class="feature-card dark-card">
+                    <h3>Advertiser journey</h3>
+                    <p>Browse cinemas, choose slots, calculate pricing, pay, upload files, and review bookings.</p>
+                </article>
+                <article class="feature-card">
+                    <h3>Operations journey</h3>
+                    <p>Review every booking, payment status, upload status, and media assignment per cinema.</p>
+                </article>
+                <article class="feature-card">
+                    <h3>Media workflow</h3>
+                    <p>Upload once and apply the same trailer or artwork across multiple selected cinemas.</p>
+                </article>
             </div>
-        </footer>
-    </div>
-</body>
-</html>
+        </div>
+    </section>
+
+    <section class="stats-section">
+        <div class="content-shell stats-shell">
+            <?php foreach ($stats as $stat): ?>
+                <article class="stat-card">
+                    <strong><?php echo $stat['value']; ?></strong>
+                    <span><?php echo $stat['label']; ?></span>
+                </article>
+            <?php endforeach; ?>
+        </div>
+    </section>
+
+    <section class="journey-section">
+        <div class="content-shell split-shell">
+            <div class="journey-copy">
+                <span class="section-tag">Core Flow</span>
+                <h2>What the platform needs to do</h2>
+                <ol class="number-list">
+                    <?php foreach ($steps as $step): ?>
+                        <li><?php echo $step; ?></li>
+                    <?php endforeach; ?>
+                </ol>
+                <a class="dark-button" href="<?php echo site_url('booking'); ?>">Open booking prototype</a>
+            </div>
+
+            <div class="journey-grid">
+                <article class="mini-card">
+                    <h3>Dynamic price summary</h3>
+                    <p>Pricing changes by cinemas selected, campaign length, and ad duration.</p>
+                </article>
+                <article class="mini-card">
+                    <h3>Upload after payment</h3>
+                    <p>Files are attached after booking completion, with bulk-apply options.</p>
+                </article>
+                <article class="mini-card">
+                    <h3>User profile area</h3>
+                    <p>Advertisers can track summary, payment state, and upload progress.</p>
+                </article>
+                <article class="mini-card">
+                    <h3>Admin control panel</h3>
+                    <p>The client sees all bookings, statuses, and upload review requirements.</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="map-preview-section">
+        <div class="content-shell split-shell split-shell-wide">
+            <div class="map-preview">
+                <div class="map-surface">
+                    <?php foreach ($cities as $city): ?>
+                        <span class="map-pin"><?php echo $city; ?></span>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <div class="map-copy">
+                <span class="section-tag">Map Integration</span>
+                <h2>Show all cinema locations on one map</h2>
+                <p>
+                    This needs a real map integration next, but the structure is ready: users can
+                    discover inventory by city, then open the cinema catalogue or booking flow.
+                </p>
+                <div class="button-row">
+                    <a class="header-button" href="<?php echo site_url('cinemas'); ?>">Open cinema list</a>
+                    <a class="text-button" href="<?php echo site_url('admin/bookings'); ?>">View admin structure</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="catalogue-teaser">
+        <div class="content-shell">
+            <div class="section-heading-row">
+                <div>
+                    <span class="section-tag">Inventory Preview</span>
+                    <h2>Sample cinema inventory</h2>
+                </div>
+                <a class="text-button" href="<?php echo site_url('cinemas'); ?>">See all locations</a>
+            </div>
+
+            <div class="cinema-grid">
+                <?php foreach ($featured_cinemas as $cinema): ?>
+                    <article class="cinema-card">
+                        <span class="city-pill"><?php echo $cinema['city']; ?></span>
+                        <h3><?php echo $cinema['name']; ?></h3>
+                        <p><?php echo $cinema['address']; ?></p>
+                        <dl class="cinema-meta">
+                            <div>
+                                <dt>Screens</dt>
+                                <dd><?php echo $cinema['screens']; ?></dd>
+                            </div>
+                            <div>
+                                <dt>Reach</dt>
+                                <dd><?php echo $cinema['monthly_reach']; ?></dd>
+                            </div>
+                        </dl>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </section>
+</main>

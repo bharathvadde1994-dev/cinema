@@ -50,5 +50,11 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 |		my-controller/my-method	-> my_controller/my_method
 */
 $route['default_controller'] = 'welcome';
+$route['cinemas'] = 'cinemas/index';
+$route['booking'] = 'booking/index';
+$route['profile'] = 'profile/index';
+$route['admin'] = 'admin/index';
+$route['admin/bookings'] = 'admin/bookings';
+$route['admin/bookings/(:num)'] = 'admin/booking/$1';
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
