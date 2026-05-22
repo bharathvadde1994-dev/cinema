@@ -310,17 +310,33 @@ CREATE TABLE `booking_status_history` (
     ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE `admin_booking_deletions` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `booking_reference` VARCHAR(30) NOT NULL,
+  `deleted_booking_id` INT UNSIGNED DEFAULT NULL,
+  `admin_user_id` INT UNSIGNED DEFAULT NULL,
+  `delete_reason` TEXT NOT NULL,
+  `snapshot_json` JSON DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_admin_booking_deletions_reference` (`booking_reference`),
+  KEY `idx_admin_booking_deletions_admin_user` (`admin_user_id`),
+  CONSTRAINT `fk_admin_booking_deletions_admin_user`
+    FOREIGN KEY (`admin_user_id`) REFERENCES `users` (`id`)
+    ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 INSERT INTO `companies`
 (`id`, `name`, `contact_email`, `contact_phone`, `website`, `billing_address`, `billing_city`, `billing_country`, `delivery_address`, `delivery_city`, `delivery_country`, `vat_number`)
 VALUES
 (1, 'Nova Mobility GmbH', 'marketing@novamobility.test', '+49 30 123456', 'https://novamobility.test', 'Alexanderplatz 1', 'Berlin', 'Germany', 'Alexanderplatz 1', 'Berlin', 'Germany', 'DE123456789'),
 (2, 'Fresh Market AG', 'ads@freshmarket.test', '+49 40 765432', 'https://freshmarket.test', 'Market Street 8', 'Hamburg', 'Germany', 'Market Street 8', 'Hamburg', 'Germany', 'DE987654321');
 
--- Password hashes below are placeholders and should be replaced before real use.
+-- Local admin login for development: admin@kinoblick.test / Admin@12345
 INSERT INTO `users`
 (`id`, `company_id`, `role`, `first_name`, `last_name`, `email`, `password_hash`, `phone`, `status`)
 VALUES
-(1, NULL, 'admin', 'Cinema', 'Admin', 'admin@kinoblick.test', '$2y$10$hpI/fS1cFwAE0Wa/VDQgHe/L82DQ1nUV6QS0AFUcwV/P34a6g2HH.', '+49 30 555000', 'active'),
+(1, NULL, 'admin', 'Cinema', 'Admin', 'admin@kinoblick.test', '$2y$10$Hy0V9hXtBGUDyEUrJgHZTuyjXO8XxvPOF.ZHW7skpWdzrNT6qh88G', '+49 30 555000', 'active'),
 (2, 1, 'advertiser', 'Nina', 'Keller', 'nina@novamobility.test', '$2y$10$hpI/fS1cFwAE0Wa/VDQgHe/L82DQ1nUV6QS0AFUcwV/P34a6g2HH.', '+49 30 555111', 'active'),
 (3, 2, 'advertiser', 'Jonas', 'Fischer', 'jonas@freshmarket.test', '$2y$10$hpI/fS1cFwAE0Wa/VDQgHe/L82DQ1nUV6QS0AFUcwV/P34a6g2HH.', '+49 40 555222', 'active');
 

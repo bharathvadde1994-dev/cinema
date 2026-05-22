@@ -122,4 +122,41 @@ class MY_Controller extends CI_Controller
             $this->load->view('layout/footer', $data);
         }
     }
+
+    protected function render_admin($view, $data = array())
+    {
+        $defaults = array(
+            'title' => 'Admin Panel',
+            'auth_user' => $this->get_current_user(),
+            'is_authenticated' => $this->is_authenticated(),
+            'auth_role' => $this->session->userdata('auth_role'),
+            'flash_error' => $this->session->flashdata('error'),
+            'flash_success' => $this->session->flashdata('success'),
+            'active_admin_nav' => '',
+            'admin_search_query' => '',
+            'body_class' => '',
+        );
+
+        $data = array_merge($defaults, $data);
+
+        $this->load->view('layout/admin_header', $data);
+        $this->load->view($view, $data);
+        $this->load->view('layout/admin_footer', $data);
+    }
+
+    protected function render_admin_auth($view, $data = array())
+    {
+        $defaults = array(
+            'title' => 'Admin Access',
+            'flash_error' => $this->session->flashdata('error'),
+            'flash_success' => $this->session->flashdata('success'),
+            'body_class' => '',
+        );
+
+        $data = array_merge($defaults, $data);
+
+        $this->load->view('layout/admin_auth_header', $data);
+        $this->load->view($view, $data);
+        $this->load->view('layout/admin_auth_footer', $data);
+    }
 }
