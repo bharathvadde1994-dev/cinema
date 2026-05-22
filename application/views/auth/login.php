@@ -1,37 +1,40 @@
-<main class="auth-page">
-    <section class="auth-section">
-        <div class="content-shell auth-shell">
-            <div class="auth-card auth-form-card">
-                <span class="section-tag">KinoBlick</span>
-                <h1>Log Into Your Account</h1>
-                <p class="auth-copy">Access your bookings, uploads, invoices, and profile settings.</p>
+<main class="auth-v2-page">
+    <section class="auth-v2-section">
+        <div class="content-shell auth-v2-shell">
+            <div class="auth-v2-panel">
+                <div class="auth-v2-brand">
+                    <strong>KINO<span>BLICK</span></strong>
+                    <small>BOOKING MADE EASY</small>
+                </div>
+
+                <h1>Welcome Back</h1>
+                <p class="auth-v2-switch-copy">Don't have an account? <a href="<?php echo site_url('auth/signup'); ?>">Sign Up</a></p>
 
                 <?php echo validation_errors('<div class="form-error">', '</div>'); ?>
 
-                <?php echo form_open(site_url('auth/login'), array('class' => 'auth-form')); ?>
-                    <label class="form-row">
-                        <span>Email</span>
-                        <input type="email" name="email" value="<?php echo set_value('email'); ?>" placeholder="Enter your email">
+                <a class="auth-google-button" href="<?php echo site_url('auth/google?mode=login'); ?>">
+                    <span>G</span>
+                    Continue with Google
+                </a>
+
+                <div class="auth-v2-divider"><span>OR</span></div>
+
+                <?php echo form_open(site_url('auth/login'), array('class' => 'auth-v2-form')); ?>
+                    <label class="auth-v2-row">
+                        <span>Work Email</span>
+                        <input type="email" name="email" value="<?php echo set_value('email'); ?>" placeholder="Enter your work email">
                     </label>
-                    <label class="form-row">
+                    <label class="auth-v2-row">
                         <span>Password</span>
                         <input type="password" name="password" placeholder="Enter your password">
                     </label>
-                    <button type="submit" class="header-button full-button">Sign In</button>
+                    <button type="submit" class="auth-v2-submit">Sign In with Email</button>
                 <?php echo form_close(); ?>
 
-                <div class="auth-footer-row">
-                    <span>New here?</span>
-                    <a href="<?php echo site_url('auth/signup'); ?>">Create account</a>
-                </div>
+                <p class="auth-v2-terms">By signing in, you agree to our Terms &amp; Privacy Policy.</p>
             </div>
 
-            <div class="auth-card auth-visual auth-visual-login">
-                <div class="auth-visual-copy">
-                    <h2>Control cinema bookings from one clean dashboard.</h2>
-                    <p>Track selected cinemas, payment status, and media uploads without leaving the platform.</p>
-                </div>
-            </div>
+            <div class="auth-v2-visual auth-v2-visual-login"></div>
         </div>
     </section>
 </main>

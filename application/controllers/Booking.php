@@ -130,8 +130,9 @@ class Booking extends MY_Controller
 
         $existing = $this->get_checkout_draft();
         $draft['billing_address'] = isset($existing['billing_address']) ? $existing['billing_address'] : $this->get_default_billing_address();
-        $draft['delivery_address'] = isset($existing['delivery_address']) ? $existing['delivery_address'] : array();
+        $draft['delivery_address'] = isset($existing['delivery_address']) ? $existing['delivery_address'] : $this->get_default_delivery_address();
         $draft['payment_details'] = isset($existing['payment_details']) ? $existing['payment_details'] : array();
+        $draft['same_as_billing'] = isset($existing['same_as_billing']) ? $existing['same_as_billing'] : $this->is_default_delivery_same_as_billing();
 
         $this->save_checkout_draft($draft);
 
@@ -272,16 +273,48 @@ class Booking extends MY_Controller
 
         return array(
             'company' => !empty($user['company_name']) ? $user['company_name'] : '',
-            'salutation' => 'Mr',
+            'salutation' => !empty($user['salutation']) ? $user['salutation'] : 'Mr',
             'first_name' => !empty($user['first_name']) ? $user['first_name'] : '',
             'last_name' => !empty($user['last_name']) ? $user['last_name'] : '',
             'street' => !empty($user['billing_address']) ? $user['billing_address'] : '',
-            'additional' => '',
-            'postcode' => '',
+            'additional' => !empty($user['billing_additional']) ? $user['billing_additional'] : '',
+            'postcode' => !empty($user['billing_postcode']) ? $user['billing_postcode'] : '',
             'city' => !empty($user['billing_city']) ? $user['billing_city'] : '',
             'country' => !empty($user['billing_country']) ? $user['billing_country'] : 'Germany',
             'phone' => !empty($user['phone']) ? $user['phone'] : '',
         );
+    }
+
+    protected function get_default_delivery_address()
+    {
+        $user = $this->get_current_user();
+
+        if (!$user) {
+            return array();
+        }
+
+        return array(
+            'street' => !empty($user['delivery_address']) ? $user['delivery_address'] : '',
+            'additional' => !empty($user['delivery_additional']) ? $user['delivery_additional'] : '',
+            'postcode' => !empty($user['delivery_postcode']) ? $user['delivery_postcode'] : '',
+            'city' => !empty($user['delivery_city']) ? $user['delivery_city'] : '',
+            'country' => !empty($user['delivery_country']) ? $user['delivery_country'] : 'Germany',
+        );
+    }
+
+    protected function is_default_delivery_same_as_billing()
+    {
+        $user = $this->get_current_user();
+
+        if (!$user) {
+            return TRUE;
+        }
+
+        return (string) $user['billing_address'] === (string) $user['delivery_address']
+            && (string) $user['billing_additional'] === (string) $user['delivery_additional']
+            && (string) $user['billing_city'] === (string) $user['delivery_city']
+            && (string) $user['billing_postcode'] === (string) $user['delivery_postcode']
+            && (string) $user['billing_country'] === (string) $user['delivery_country'];
     }
 
     protected function build_checkout_summary($draft)

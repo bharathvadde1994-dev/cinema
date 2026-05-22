@@ -1,69 +1,41 @@
-<main class="auth-page">
-    <section class="auth-section">
-        <div class="content-shell auth-shell auth-shell-signup">
-            <div class="auth-card auth-form-card">
-                <span class="section-tag">KinoBlick</span>
+<main class="auth-v2-page">
+    <section class="auth-v2-section">
+        <div class="content-shell auth-v2-shell">
+            <div class="auth-v2-panel">
+                <div class="auth-v2-brand">
+                    <strong>KINO<span>BLICK</span></strong>
+                    <small>BOOKING MADE EASY</small>
+                </div>
+
                 <h1>Create Your Free Account</h1>
-                <p class="auth-copy">Set up your advertiser profile and start booking cinema ad slots.</p>
+                <p class="auth-v2-switch-copy">Already have an account? <a href="<?php echo site_url('auth/login'); ?>">Sign In</a></p>
 
                 <?php echo validation_errors('<div class="form-error">', '</div>'); ?>
 
-                <?php echo form_open(site_url('auth/signup'), array('class' => 'auth-form auth-form-two-col')); ?>
-                    <label class="form-row">
-                        <span>Company Name</span>
-                        <input type="text" name="company_name" value="<?php echo set_value('company_name'); ?>" placeholder="Company name">
+                <a class="auth-google-button" href="<?php echo site_url('auth/google?mode=signup'); ?>">
+                    <span>G</span>
+                    Continue with Google
+                </a>
+
+                <div class="auth-v2-divider"><span>OR</span></div>
+
+                <?php echo form_open(site_url('auth/signup'), array('class' => 'auth-v2-form')); ?>
+                    <input type="hidden" name="signup_stage" value="account">
+                    <label class="auth-v2-row">
+                        <span>Work Email</span>
+                        <input type="email" name="email" value="<?php echo set_value('email'); ?>" placeholder="Enter your work email">
                     </label>
-                    <label class="form-row">
-                        <span>First Name</span>
-                        <input type="text" name="first_name" value="<?php echo set_value('first_name'); ?>" placeholder="First name">
-                    </label>
-                    <label class="form-row">
-                        <span>Last Name</span>
-                        <input type="text" name="last_name" value="<?php echo set_value('last_name'); ?>" placeholder="Last name">
-                    </label>
-                    <label class="form-row">
-                        <span>Email</span>
-                        <input type="email" name="email" value="<?php echo set_value('email'); ?>" placeholder="Business email">
-                    </label>
-                    <label class="form-row">
-                        <span>Phone</span>
-                        <input type="text" name="phone" value="<?php echo set_value('phone'); ?>" placeholder="Phone number">
-                    </label>
-                    <label class="form-row">
-                        <span>Address</span>
-                        <input type="text" name="billing_address" value="<?php echo set_value('billing_address'); ?>" placeholder="Billing address">
-                    </label>
-                    <label class="form-row">
-                        <span>City</span>
-                        <input type="text" name="billing_city" value="<?php echo set_value('billing_city'); ?>" placeholder="City">
-                    </label>
-                    <label class="form-row">
-                        <span>Country</span>
-                        <input type="text" name="billing_country" value="<?php echo set_value('billing_country', 'Germany'); ?>" placeholder="Country">
-                    </label>
-                    <label class="form-row">
+                    <label class="auth-v2-row">
                         <span>Password</span>
-                        <input type="password" name="password" placeholder="Minimum 8 characters">
+                        <input type="password" name="password" placeholder="Create a password">
                     </label>
-                    <label class="form-row">
-                        <span>Confirm Password</span>
-                        <input type="password" name="password_confirm" placeholder="Repeat password">
-                    </label>
-                    <button type="submit" class="header-button full-button auth-submit">Sign Up</button>
+                    <button type="submit" class="auth-v2-submit">Sign Up with Email</button>
                 <?php echo form_close(); ?>
 
-                <div class="auth-footer-row">
-                    <span>Already have an account?</span>
-                    <a href="<?php echo site_url('auth/login'); ?>">Log in</a>
-                </div>
+                <p class="auth-v2-terms">By signing up, you agree to our Terms &amp; Privacy Policy.</p>
             </div>
 
-            <div class="auth-card auth-visual auth-visual-signup">
-                <div class="auth-visual-copy">
-                    <h2>Launch campaigns across multiple cinemas with one account.</h2>
-                    <p>After payment, upload once and apply the same media set across the selected venues.</p>
-                </div>
-            </div>
+            <div class="auth-v2-visual auth-v2-visual-signup"></div>
         </div>
     </section>
 </main>

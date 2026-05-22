@@ -1,94 +1,53 @@
-<main>
-    <section class="page-hero profile-hero">
-        <div class="content-shell split-shell">
-            <div>
-                <span class="section-tag">My Account</span>
-                <h1>Personal Profile</h1>
-                <p class="page-lead">Manage your account details, company info, and recent booking activity.</p>
-            </div>
-            <div class="hero-side-note">
-                <strong>Signed in as</strong>
-                <p><?php echo html_escape($auth_user['email']); ?></p>
-            </div>
-        </div>
-    </section>
-
-    <section class="profile-section">
-        <div class="content-shell profile-shell">
+<main class="account-page">
+    <section class="account-section">
+        <div class="content-shell account-shell">
             <?php $this->load->view('profile/sidebar'); ?>
 
-            <div class="profile-main">
-                <div class="table-card">
-                    <div class="table-card-head">
-                        <h2>Personal Profile</h2>
-                    </div>
-
-                    <?php echo validation_errors('<div class="form-error">', '</div>'); ?>
-
-                    <?php echo form_open(site_url('profile/update'), array('class' => 'auth-form auth-form-two-col profile-form')); ?>
-                        <label class="form-row">
-                            <span>First Name</span>
-                            <input type="text" name="first_name" value="<?php echo set_value('first_name', $auth_user['first_name']); ?>">
-                        </label>
-                        <label class="form-row">
-                            <span>Last Name</span>
-                            <input type="text" name="last_name" value="<?php echo set_value('last_name', $auth_user['last_name']); ?>">
-                        </label>
-                        <label class="form-row">
-                            <span>Email</span>
-                            <input type="email" name="email" value="<?php echo set_value('email', $auth_user['email']); ?>">
-                        </label>
-                        <label class="form-row">
-                            <span>Phone</span>
-                            <input type="text" name="phone" value="<?php echo set_value('phone', $auth_user['phone']); ?>">
-                        </label>
-                        <label class="form-row">
-                            <span>Company Name</span>
-                            <input type="text" name="company_name" value="<?php echo set_value('company_name', $auth_user['company_name']); ?>">
-                        </label>
-                        <label class="form-row">
-                            <span>Website</span>
-                            <input type="text" name="website" value="<?php echo set_value('website', $auth_user['website']); ?>">
-                        </label>
-                        <label class="form-row form-row-full">
-                            <span>VAT Number</span>
-                            <input type="text" name="vat_number" value="<?php echo set_value('vat_number', $auth_user['vat_number']); ?>">
-                        </label>
-                        <button type="submit" class="header-button">Save Changes</button>
-                    <?php echo form_close(); ?>
+            <section class="account-content-card">
+                <div class="account-content-head">
+                    <h1>Personal Profile</h1>
+                    <p>Manage your personal and business information.</p>
                 </div>
 
-                <div class="table-card">
-                    <div class="table-card-head">
-                        <h2>Recent Bookings</h2>
-                        <a class="text-button" href="<?php echo site_url('booking'); ?>">Create another booking</a>
+                <?php echo validation_errors('<div class="form-error">', '</div>'); ?>
+
+                <?php echo form_open(site_url('profile/update'), array('class' => 'account-form-grid')); ?>
+                    <label class="account-field account-field-full">
+                        <span>Full Name</span>
+                        <input type="text" name="full_name" value="<?php echo set_value('full_name', trim($auth_user['first_name'] . ' ' . $auth_user['last_name'])); ?>">
+                    </label>
+                    <label class="account-field">
+                        <span>Salutation</span>
+                        <?php $salutation = set_value('salutation', $auth_user['salutation'] ? $auth_user['salutation'] : 'Mr'); ?>
+                        <select name="salutation">
+                            <option value="Mr" <?php echo $salutation === 'Mr' ? 'selected' : ''; ?>>Mr.</option>
+                            <option value="Ms" <?php echo $salutation === 'Ms' ? 'selected' : ''; ?>>Ms.</option>
+                            <option value="Mrs" <?php echo $salutation === 'Mrs' ? 'selected' : ''; ?>>Mrs.</option>
+                            <option value="Dr" <?php echo $salutation === 'Dr' ? 'selected' : ''; ?>>Dr.</option>
+                        </select>
+                    </label>
+                    <label class="account-field">
+                        <span>Company Name</span>
+                        <input type="text" name="company_name" value="<?php echo set_value('company_name', $auth_user['company_name']); ?>">
+                    </label>
+                    <label class="account-field">
+                        <span>VAT ID</span>
+                        <input type="text" name="vat_number" value="<?php echo set_value('vat_number', $auth_user['vat_number']); ?>">
+                    </label>
+                    <label class="account-field">
+                        <span>Email Address</span>
+                        <input type="email" name="email" value="<?php echo set_value('email', $auth_user['email']); ?>">
+                    </label>
+                    <label class="account-field">
+                        <span>Phone Number</span>
+                        <input type="text" name="phone" value="<?php echo set_value('phone', $auth_user['phone']); ?>">
+                    </label>
+                    <input type="hidden" name="website" value="<?php echo html_escape($auth_user['website']); ?>">
+                    <div class="account-actions">
+                        <button type="submit" class="account-primary-button">Save Changes</button>
                     </div>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Reference</th>
-                                <th>Campaign</th>
-                                <th>Status</th>
-                                <th>Start</th>
-                                <th>Term</th>
-                                <th>Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($bookings as $booking): ?>
-                                <tr>
-                                    <td><?php echo html_escape($booking['reference']); ?></td>
-                                    <td><?php echo html_escape($booking['campaign']); ?></td>
-                                    <td><span class="status-chip"><?php echo html_escape($booking['status']); ?></span></td>
-                                    <td><?php echo html_escape($booking['start_date']); ?></td>
-                                    <td><?php echo html_escape($booking['term']); ?></td>
-                                    <td><?php echo html_escape($booking['amount']); ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                <?php echo form_close(); ?>
+            </section>
         </div>
     </section>
 </main>
