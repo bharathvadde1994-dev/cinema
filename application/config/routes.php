@@ -50,9 +50,17 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 |		my-controller/my-method	-> my_controller/my_method
 */
 $route['default_controller'] = 'welcome';
+$route['auth/login'] = 'auth/login';
+$route['auth/signup'] = 'auth/signup';
+$route['auth/logout'] = 'auth/logout';
 $route['cinemas'] = 'cinemas/index';
 $route['booking'] = 'booking/index';
+$route['booking/add_to_cart'] = 'booking/add_to_cart';
+$route['booking/checkout'] = 'booking/checkout';
+$route['booking/place_order'] = 'booking/place_order';
 $route['profile'] = 'profile/index';
+$route['profile/update'] = 'profile/update';
+$route['profile/addresses'] = 'profile/addresses';
 $route['admin'] = 'admin/index';
 $route['admin/bookings'] = 'admin/bookings';
 $route['admin/bookings/(:num)'] = 'admin/booking/$1';

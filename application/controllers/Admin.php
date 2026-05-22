@@ -3,6 +3,16 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Admin extends MY_Controller
 {
+    public function __construct()
+    {
+        parent::__construct();
+        $this->require_auth();
+
+        if ($this->session->userdata('auth_role') !== 'admin') {
+            show_404();
+        }
+    }
+
     public function index()
     {
         redirect('admin/bookings');

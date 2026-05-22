@@ -34,6 +34,9 @@ CREATE TABLE `companies` (
   `billing_address` VARCHAR(255) DEFAULT NULL,
   `billing_city` VARCHAR(120) DEFAULT NULL,
   `billing_country` VARCHAR(120) DEFAULT NULL,
+  `delivery_address` VARCHAR(255) DEFAULT NULL,
+  `delivery_city` VARCHAR(120) DEFAULT NULL,
+  `delivery_country` VARCHAR(120) DEFAULT NULL,
   `vat_number` VARCHAR(80) DEFAULT NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -292,18 +295,18 @@ CREATE TABLE `booking_status_history` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `companies`
-(`id`, `name`, `contact_email`, `contact_phone`, `website`, `billing_address`, `billing_city`, `billing_country`, `vat_number`)
+(`id`, `name`, `contact_email`, `contact_phone`, `website`, `billing_address`, `billing_city`, `billing_country`, `delivery_address`, `delivery_city`, `delivery_country`, `vat_number`)
 VALUES
-(1, 'Nova Mobility GmbH', 'marketing@novamobility.test', '+49 30 123456', 'https://novamobility.test', 'Alexanderplatz 1', 'Berlin', 'Germany', 'DE123456789'),
-(2, 'Fresh Market AG', 'ads@freshmarket.test', '+49 40 765432', 'https://freshmarket.test', 'Market Street 8', 'Hamburg', 'Germany', 'DE987654321');
+(1, 'Nova Mobility GmbH', 'marketing@novamobility.test', '+49 30 123456', 'https://novamobility.test', 'Alexanderplatz 1', 'Berlin', 'Germany', 'Alexanderplatz 1', 'Berlin', 'Germany', 'DE123456789'),
+(2, 'Fresh Market AG', 'ads@freshmarket.test', '+49 40 765432', 'https://freshmarket.test', 'Market Street 8', 'Hamburg', 'Germany', 'Market Street 8', 'Hamburg', 'Germany', 'DE987654321');
 
 -- Password hashes below are placeholders and should be replaced before real use.
 INSERT INTO `users`
 (`id`, `company_id`, `role`, `first_name`, `last_name`, `email`, `password_hash`, `phone`, `status`)
 VALUES
-(1, NULL, 'admin', 'Cinema', 'Admin', 'admin@kinoblick.test', '$2y$10$replace.with.real.hash.for.admin.account', '+49 30 555000', 'active'),
-(2, 1, 'advertiser', 'Nina', 'Keller', 'nina@novamobility.test', '$2y$10$replace.with.real.hash.for.client.account', '+49 30 555111', 'active'),
-(3, 2, 'advertiser', 'Jonas', 'Fischer', 'jonas@freshmarket.test', '$2y$10$replace.with.real.hash.for.client.account', '+49 40 555222', 'active');
+(1, NULL, 'admin', 'Cinema', 'Admin', 'admin@kinoblick.test', '$2y$10$hpI/fS1cFwAE0Wa/VDQgHe/L82DQ1nUV6QS0AFUcwV/P34a6g2HH.', '+49 30 555000', 'active'),
+(2, 1, 'advertiser', 'Nina', 'Keller', 'nina@novamobility.test', '$2y$10$hpI/fS1cFwAE0Wa/VDQgHe/L82DQ1nUV6QS0AFUcwV/P34a6g2HH.', '+49 30 555111', 'active'),
+(3, 2, 'advertiser', 'Jonas', 'Fischer', 'jonas@freshmarket.test', '$2y$10$hpI/fS1cFwAE0Wa/VDQgHe/L82DQ1nUV6QS0AFUcwV/P34a6g2HH.', '+49 40 555222', 'active');
 
 INSERT INTO `cinemas`
 (`id`, `name`, `slug`, `city`, `region`, `country`, `address_line`, `postal_code`, `latitude`, `longitude`, `monthly_reach`, `description`, `status`)
@@ -311,7 +314,27 @@ VALUES
 (1, 'Astor Grand Cinema', 'astor-grand-cinema', 'Berlin', 'Berlin', 'Germany', 'Potsdamer Platz 7', '10785', 52.5096000, 13.3759000, 42000, 'Large premium city-centre cinema with strong business audience.', 'active'),
 (2, 'Harbor Lights Multiplex', 'harbor-lights-multiplex', 'Hamburg', 'Hamburg', 'Germany', 'Kehrwieder 4', '20457', 53.5450000, 9.9867000, 28500, 'Modern multiplex close to the harbour district.', 'active'),
 (3, 'Bavaria Plaza Screens', 'bavaria-plaza-screens', 'Munich', 'Bavaria', 'Germany', 'Leopoldstrasse 54', '80802', 48.1590000, 11.5864000, 24400, 'High-spend urban audience with premium lobby placement.', 'active'),
-(4, 'Rhein Forum Cinema', 'rhein-forum-cinema', 'Cologne', 'North Rhine-Westphalia', 'Germany', 'Hohenzollernring 22', '50672', 50.9391000, 6.9447000, 31200, 'Strong downtown footfall and mixed-format screen network.', 'active');
+(4, 'Rhein Forum Cinema', 'rhein-forum-cinema', 'Cologne', 'North Rhine-Westphalia', 'Germany', 'Hohenzollernring 22', '50672', 50.9391000, 6.9447000, 31200, 'Strong downtown footfall and mixed-format screen network.', 'active'),
+(5, 'Skyline Center Cinema', 'skyline-center-cinema', 'Frankfurt', 'Hesse', 'Germany', 'Zeil 121', '60313', 50.1139000, 8.6793000, 36800, 'Central premium site close to shopping and finance districts.', 'active'),
+(6, 'Neckar Screen House', 'neckar-screen-house', 'Stuttgart', 'Baden-Wurttemberg', 'Germany', 'Konigstrasse 41', '70173', 48.7783000, 9.1805000, 29500, 'City-centre cinema with balanced weekday and weekend traffic.', 'active'),
+(7, 'Riverside Film Gallery', 'riverside-film-gallery', 'Dusseldorf', 'North Rhine-Westphalia', 'Germany', 'Graf-Adolf-Platz 6', '40213', 51.2217000, 6.7800000, 30100, 'Strong reach with premium foyer branding options.', 'active'),
+(8, 'Leipzig Lichtspielhaus', 'leipzig-lichtspielhaus', 'Leipzig', 'Saxony', 'Germany', 'Petersstrasse 20', '04109', 51.3397000, 12.3731000, 21400, 'Urban cinema serving a young city audience.', 'active'),
+(9, 'Elbe Vista Cinema', 'elbe-vista-cinema', 'Dresden', 'Saxony', 'Germany', 'Prager Strasse 8', '01069', 51.0439000, 13.7373000, 22800, 'Downtown venue with strong commuter visibility.', 'active'),
+(10, 'Ruhr Tower Screens', 'ruhr-tower-screens', 'Dortmund', 'North Rhine-Westphalia', 'Germany', 'Kampstrasse 45', '44137', 51.5142000, 7.4653000, 24700, 'Busy city centre screens with family-focused scheduling.', 'active'),
+(11, 'Essen Grand Multiplex', 'essen-grand-multiplex', 'Essen', 'North Rhine-Westphalia', 'Germany', 'Limbecker Platz 1A', '45127', 51.4566000, 7.0116000, 25200, 'High-volume multiplex close to retail core.', 'active'),
+(12, 'Hanover Central Screens', 'hanover-central-screens', 'Hannover', 'Lower Saxony', 'Germany', 'Bahnhofstrasse 12', '30159', 52.3759000, 9.7320000, 23600, 'Reliable weekly attendance with strong commuter footfall.', 'active'),
+(13, 'Old Town Cinema Nurnberg', 'old-town-cinema-nurnberg', 'Nuremberg', 'Bavaria', 'Germany', 'Karolinenstrasse 30', '90402', 49.4521000, 11.0767000, 21900, 'Historic city-centre catchment with strong evening traffic.', 'active'),
+(14, 'Waterfront Movie Hub', 'waterfront-movie-hub', 'Bremen', 'Bremen', 'Germany', 'Sodernstrasse 11', '28195', 53.0793000, 8.8017000, 20500, 'Compact cinema hub with strong local recall.', 'active'),
+(15, 'Capitol Cinema Bonn', 'capitol-cinema-bonn', 'Bonn', 'North Rhine-Westphalia', 'Germany', 'Bertha-von-Suttner-Platz 2', '53111', 50.7374000, 7.1025000, 19100, 'Professional audience base with steady weekday performance.', 'active'),
+(16, 'Mannheim CineForum', 'mannheim-cineforum', 'Mannheim', 'Baden-Wurttemberg', 'Germany', 'Planken O7', '68161', 49.4875000, 8.4660000, 18300, 'Regional cinema with mixed retail and commuter audience.', 'active'),
+(17, 'Freiburg Altstadt Cinema', 'freiburg-altstadt-cinema', 'Freiburg', 'Baden-Wurttemberg', 'Germany', 'Kaiser-Joseph-Strasse 168', '79098', 47.9961000, 7.8494000, 17600, 'Compact premium venue serving a strong student audience.', 'active'),
+(18, 'Harborlight Kiel Screens', 'harborlight-kiel-screens', 'Kiel', 'Schleswig-Holstein', 'Germany', 'Holstenstrasse 54', '24103', 54.3233000, 10.1350000, 16500, 'Northern city-centre venue with family and commuter reach.', 'active'),
+(19, 'Baltic Star Cinema', 'baltic-star-cinema', 'Rostock', 'Mecklenburg-Vorpommern', 'Germany', 'Kröpeliner Strasse 70', '18055', 54.0887000, 12.1400000, 15800, 'Regional premium screens near the main shopping streets.', 'active'),
+(20, 'Mainz Forum Filmhaus', 'mainz-forum-filmhaus', 'Mainz', 'Rhineland-Palatinate', 'Germany', 'Ludwigsstrasse 10', '55116', 49.9992000, 8.2740000, 17100, 'Popular city-centre cinema with balanced programming.', 'active'),
+(21, 'Wiesbaden Palace Screens', 'wiesbaden-palace-screens', 'Wiesbaden', 'Hesse', 'Germany', 'Kirchgasse 52', '65183', 50.0822000, 8.2417000, 16900, 'Premium local venue with upscale catchment.', 'active'),
+(22, 'Augsburg Ring Cinema', 'augsburg-ring-cinema', 'Augsburg', 'Bavaria', 'Germany', 'Annastrasse 18', '86150', 48.3668000, 10.8987000, 18200, 'Well-positioned screen network with regional reach.', 'active'),
+(23, 'Ruhr Lichtspiele Bochum', 'ruhr-lichtspiele-bochum', 'Bochum', 'North Rhine-Westphalia', 'Germany', 'Kortumstrasse 70', '44787', 51.4818000, 7.2162000, 18800, 'Central Ruhrgebiet location with strong repeat visitation.', 'active'),
+(24, 'Schwebebahn Cinema', 'schwebebahn-cinema', 'Wuppertal', 'North Rhine-Westphalia', 'Germany', 'Alte Freiheit 9', '42103', 51.2562000, 7.1508000, 16200, 'Compact cinema cluster near rail and shopping links.', 'active');
 
 INSERT INTO `cinema_screens`
 (`id`, `cinema_id`, `name`, `screen_type`, `seat_capacity`, `status`)
@@ -321,7 +344,47 @@ VALUES
 (3, 2, 'Screen A', 'standard', 190, 'active'),
 (4, 2, 'Screen B', 'premium', 240, 'active'),
 (5, 3, 'Hall 1', 'vip', 160, 'active'),
-(6, 4, 'Main Hall', 'premium', 260, 'active');
+(6, 4, 'Main Hall', 'premium', 260, 'active'),
+(7, 5, 'Hall 1', 'premium', 210, 'active'),
+(8, 5, 'Hall 2', 'standard', 180, 'active'),
+(9, 6, 'Hall 1', 'premium', 200, 'active'),
+(10, 6, 'Hall 2', 'standard', 170, 'active'),
+(11, 7, 'Hall 1', 'premium', 220, 'active'),
+(12, 7, 'Hall 2', 'standard', 175, 'active'),
+(13, 8, 'Hall 1', 'standard', 160, 'active'),
+(14, 8, 'Hall 2', 'standard', 145, 'active'),
+(15, 9, 'Hall 1', 'premium', 180, 'active'),
+(16, 9, 'Hall 2', 'standard', 150, 'active'),
+(17, 10, 'Hall 1', 'premium', 190, 'active'),
+(18, 10, 'Hall 2', 'standard', 160, 'active'),
+(19, 11, 'Hall 1', 'premium', 200, 'active'),
+(20, 11, 'Hall 2', 'standard', 180, 'active'),
+(21, 12, 'Hall 1', 'standard', 170, 'active'),
+(22, 12, 'Hall 2', 'premium', 190, 'active'),
+(23, 13, 'Hall 1', 'standard', 165, 'active'),
+(24, 13, 'Hall 2', 'vip', 140, 'active'),
+(25, 14, 'Hall 1', 'standard', 155, 'active'),
+(26, 14, 'Hall 2', 'standard', 130, 'active'),
+(27, 15, 'Hall 1', 'premium', 180, 'active'),
+(28, 15, 'Hall 2', 'standard', 150, 'active'),
+(29, 16, 'Hall 1', 'standard', 160, 'active'),
+(30, 16, 'Hall 2', 'standard', 150, 'active'),
+(31, 17, 'Hall 1', 'premium', 170, 'active'),
+(32, 17, 'Hall 2', 'standard', 140, 'active'),
+(33, 18, 'Hall 1', 'standard', 150, 'active'),
+(34, 18, 'Hall 2', 'standard', 135, 'active'),
+(35, 19, 'Hall 1', 'standard', 145, 'active'),
+(36, 19, 'Hall 2', 'premium', 165, 'active'),
+(37, 20, 'Hall 1', 'standard', 150, 'active'),
+(38, 20, 'Hall 2', 'premium', 170, 'active'),
+(39, 21, 'Hall 1', 'premium', 175, 'active'),
+(40, 21, 'Hall 2', 'standard', 145, 'active'),
+(41, 22, 'Hall 1', 'standard', 160, 'active'),
+(42, 22, 'Hall 2', 'premium', 180, 'active'),
+(43, 23, 'Hall 1', 'standard', 165, 'active'),
+(44, 23, 'Hall 2', 'standard', 155, 'active'),
+(45, 24, 'Hall 1', 'standard', 150, 'active'),
+(46, 24, 'Hall 2', 'premium', 170, 'active');
 
 INSERT INTO `cinema_rate_cards`
 (`id`, `cinema_id`, `screen_id`, `ad_length_seconds`, `term_months`, `play_frequency`, `monthly_price`, `setup_fee`, `currency`, `status`)
@@ -331,7 +394,27 @@ VALUES
 (3, 2, 4, 30, 3, 'Before each main feature', 2600.00, 100.00, 'EUR', 'active'),
 (4, 2, 4, 30, 6, 'Before each main feature', 2400.00, 100.00, 'EUR', 'active'),
 (5, 3, 5, 15, 3, 'Before each main feature', 1800.00, 100.00, 'EUR', 'active'),
-(6, 4, 6, 45, 6, 'Before each main feature', 3200.00, 150.00, 'EUR', 'active');
+(6, 4, 6, 45, 6, 'Before each main feature', 3200.00, 150.00, 'EUR', 'active'),
+(7, 5, 7, 30, 3, 'Before each main feature', 2950.00, 120.00, 'EUR', 'active'),
+(8, 6, 9, 30, 3, 'Before each main feature', 2480.00, 110.00, 'EUR', 'active'),
+(9, 7, 11, 30, 3, 'Before each main feature', 2660.00, 110.00, 'EUR', 'active'),
+(10, 8, 13, 30, 3, 'Before each main feature', 1980.00, 90.00, 'EUR', 'active'),
+(11, 9, 15, 30, 3, 'Before each main feature', 2050.00, 90.00, 'EUR', 'active'),
+(12, 10, 17, 30, 3, 'Before each main feature', 2210.00, 95.00, 'EUR', 'active'),
+(13, 11, 19, 30, 3, 'Before each main feature', 2280.00, 95.00, 'EUR', 'active'),
+(14, 12, 22, 30, 3, 'Before each main feature', 2140.00, 90.00, 'EUR', 'active'),
+(15, 13, 24, 30, 3, 'Before each main feature', 2070.00, 90.00, 'EUR', 'active'),
+(16, 14, 25, 30, 3, 'Before each main feature', 1880.00, 80.00, 'EUR', 'active'),
+(17, 15, 27, 30, 3, 'Before each main feature', 1930.00, 80.00, 'EUR', 'active'),
+(18, 16, 29, 30, 3, 'Before each main feature', 1860.00, 80.00, 'EUR', 'active'),
+(19, 17, 31, 30, 3, 'Before each main feature', 1790.00, 80.00, 'EUR', 'active'),
+(20, 18, 33, 30, 3, 'Before each main feature', 1710.00, 75.00, 'EUR', 'active'),
+(21, 19, 36, 30, 3, 'Before each main feature', 1680.00, 75.00, 'EUR', 'active'),
+(22, 20, 38, 30, 3, 'Before each main feature', 1760.00, 75.00, 'EUR', 'active'),
+(23, 21, 39, 30, 3, 'Before each main feature', 1820.00, 75.00, 'EUR', 'active'),
+(24, 22, 42, 30, 3, 'Before each main feature', 1890.00, 80.00, 'EUR', 'active'),
+(25, 23, 43, 30, 3, 'Before each main feature', 1840.00, 80.00, 'EUR', 'active'),
+(26, 24, 46, 30, 3, 'Before each main feature', 1750.00, 75.00, 'EUR', 'active');
 
 INSERT INTO `bookings`
 (`id`, `booking_reference`, `user_id`, `company_id`, `campaign_name`, `term_months`, `ad_length_seconds`, `start_date`, `end_date`, `play_frequency`, `status`, `payment_status`, `media_status`, `subtotal_amount`, `setup_fee_total`, `discount_amount`, `tax_amount`, `grand_total`, `currency`, `notes`)
@@ -375,4 +458,3 @@ VALUES
 (2, 1, 2, 'paid', 'awaiting_uploads', 'Waiting for media package.', '2026-05-21 10:17:00'),
 (3, 2, 3, 'paid', 'approved', 'Media approved for all cinemas.', '2026-05-16 10:00:00'),
 (4, 2, 1, 'approved', 'live', 'Campaign activated on schedule.', '2026-05-15 18:00:00');
-

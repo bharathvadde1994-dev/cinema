@@ -4,13 +4,92 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class MY_Controller extends CI_Controller
 {
     public $demo;
+    public $auth;
+    protected $current_user = FALSE;
 
     public function __construct()
     {
         parent::__construct();
 
-        $this->load->helper('url');
         $this->load->model('DemoData_model', 'demo');
+        $this->load->model('Auth_model', 'auth');
+    }
+
+    protected function get_current_user()
+    {
+        if ($this->current_user !== FALSE) {
+            return $this->current_user;
+        }
+
+        $user_id = (int) $this->session->userdata('auth_user_id');
+
+        if ($user_id <= 0) {
+            $this->current_user = NULL;
+
+            return NULL;
+        }
+
+        $user = $this->auth->get_user_with_company($user_id);
+
+        if (!$user) {
+            $this->session->unset_userdata(array(
+                'auth_user_id',
+                'auth_role',
+                'auth_name',
+            ));
+
+            $this->current_user = NULL;
+
+            return NULL;
+        }
+
+        $this->current_user = $user;
+
+        return $this->current_user;
+    }
+
+    protected function is_authenticated()
+    {
+        return $this->get_current_user() !== NULL;
+    }
+
+    protected function require_auth()
+    {
+        if (!$this->is_authenticated()) {
+            $this->session->set_flashdata('error', 'Please log in to continue.');
+            redirect('auth/login');
+            exit;
+        }
+    }
+
+    protected function require_guest()
+    {
+        if ($this->is_authenticated()) {
+            redirect('profile');
+            exit;
+        }
+    }
+
+    protected function sign_in_user($user)
+    {
+        $this->session->set_userdata(array(
+            'auth_user_id' => (int) $user['id'],
+            'auth_role' => $user['role'],
+            'auth_name' => trim($user['first_name'] . ' ' . $user['last_name']),
+        ));
+
+        $this->current_user = $user;
+    }
+
+    protected function sign_out_user()
+    {
+        $this->session->unset_userdata(array(
+            'auth_user_id',
+            'auth_role',
+            'auth_name',
+        ));
+
+        $this->current_user = NULL;
     }
 
     protected function render($view, $data = array())
@@ -18,12 +97,23 @@ class MY_Controller extends CI_Controller
         $defaults = array(
             'title' => 'KinoBlick',
             'active_nav' => '',
+            'auth_user' => $this->get_current_user(),
+            'is_authenticated' => $this->is_authenticated(),
+            'auth_role' => $this->session->userdata('auth_role'),
+            'has_checkout_draft' => !empty($this->session->userdata('checkout_draft')),
+            'flash_error' => $this->session->flashdata('error'),
+            'flash_success' => $this->session->flashdata('success'),
+            'hide_footer' => FALSE,
+            'body_class' => '',
         );
 
         $data = array_merge($defaults, $data);
 
         $this->load->view('layout/header', $data);
         $this->load->view($view, $data);
-        $this->load->view('layout/footer', $data);
+
+        if (empty($data['hide_footer'])) {
+            $this->load->view('layout/footer', $data);
+        }
     }
 }
