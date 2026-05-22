@@ -26,6 +26,18 @@ class Auth_model extends CI_Model
             ->row_array();
     }
 
+    public function find_user_by_google_sub($google_sub)
+    {
+        return $this->db
+            ->select('users.*, companies.name AS company_name, companies.contact_email AS company_email, companies.contact_phone AS company_phone')
+            ->from('users')
+            ->join('companies', 'companies.id = users.company_id', 'left')
+            ->where('users.google_sub', $google_sub)
+            ->limit(1)
+            ->get()
+            ->row_array();
+    }
+
     public function verify_credentials($email, $password)
     {
         $user = $this->find_user_by_email($email);
@@ -78,6 +90,8 @@ class Auth_model extends CI_Model
             'last_name' => $data['last_name'],
             'salutation' => isset($data['salutation']) ? $data['salutation'] : 'Mr',
             'business_type' => isset($data['business_type']) ? $data['business_type'] : NULL,
+            'auth_provider' => isset($data['auth_provider']) ? $data['auth_provider'] : 'email',
+            'google_sub' => isset($data['google_sub']) ? $data['google_sub'] : NULL,
             'email' => $data['email'],
             'password_hash' => password_hash($data['password'], PASSWORD_DEFAULT),
             'phone' => $data['phone'],
@@ -139,6 +153,16 @@ class Auth_model extends CI_Model
         return $this->db
             ->where('id', (int) $user['company_id'])
             ->update('companies', $company_data);
+    }
+
+    public function link_google_identity($user_id, $google_sub)
+    {
+        return $this->db
+            ->where('id', (int) $user_id)
+            ->update('users', array(
+                'auth_provider' => 'google',
+                'google_sub' => $google_sub,
+            ));
     }
 
     public function find_or_create_google_user($email)

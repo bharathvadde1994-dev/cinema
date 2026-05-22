@@ -94,6 +94,11 @@ class MY_Controller extends CI_Controller
 
     protected function render($view, $data = array())
     {
+        $multi_cart = $this->session->userdata('multi_booking_cart');
+        $has_multi_cart = is_array($multi_cart)
+            && !empty($multi_cart['items'])
+            && is_array($multi_cart['items']);
+
         $defaults = array(
             'title' => 'KinoBlick',
             'active_nav' => '',
@@ -101,6 +106,7 @@ class MY_Controller extends CI_Controller
             'is_authenticated' => $this->is_authenticated(),
             'auth_role' => $this->session->userdata('auth_role'),
             'has_checkout_draft' => !empty($this->session->userdata('checkout_draft')),
+            'has_multi_cart' => $has_multi_cart,
             'flash_error' => $this->session->flashdata('error'),
             'flash_success' => $this->session->flashdata('success'),
             'hide_footer' => FALSE,

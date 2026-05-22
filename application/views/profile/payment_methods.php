@@ -13,18 +13,19 @@
                     <div class="account-payment-icon">S</div>
                     <div>
                         <?php if (!empty($saved_payment_method['last4'])): ?>
-                            <h2>Stripe Card</h2>
-                            <p>Default payment method</p>
-                            <span>Ending in <?php echo html_escape($saved_payment_method['last4']); ?> via <?php echo html_escape($saved_payment_method['provider']); ?></span>
+                            <h2>Visa ending in .... <?php echo html_escape($saved_payment_method['last4']); ?></h2>
+                            <p><?php echo html_escape($saved_payment_method['provider']); ?></p>
+                            <strong>Cardholder: <?php echo !empty($saved_payment_method['cardholder_name']) ? html_escape($saved_payment_method['cardholder_name']) : html_escape(trim($auth_user['first_name'] . ' ' . $auth_user['last_name'])); ?></strong>
+                            <span>Expires: <?php echo html_escape($saved_payment_method['expiry_month']); ?>/<?php echo html_escape($saved_payment_method['expiry_year']); ?></span>
                         <?php else: ?>
-                            <h2>Stripe Card</h2>
-                            <p>No saved card yet</p>
-                            <span>Add a card during checkout and it will appear here.</span>
+                            <h2>No saved card yet</h2>
+                            <p>Add a card during checkout</p>
+                            <span>Your saved Stripe card will appear here once checkout is completed.</span>
                         <?php endif; ?>
                     </div>
                 </article>
 
-                <a class="account-secondary-button account-inline-link" href="<?php echo site_url('booking/checkout'); ?>">Manage in Checkout</a>
+                <a class="account-secondary-button account-inline-link" href="<?php echo site_url('booking/checkout'); ?>">Change Payment Method</a>
             </section>
         </div>
     </section>

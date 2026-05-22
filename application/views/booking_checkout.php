@@ -2,8 +2,10 @@
     <?php
     $billing = !empty($checkout_draft['billing_address']) ? $checkout_draft['billing_address'] : array();
     $delivery = !empty($checkout_draft['delivery_address']) ? $checkout_draft['delivery_address'] : array();
-    $payment = !empty($checkout_draft['payment_details']) ? $checkout_draft['payment_details'] : array();
     $same_as_billing = isset($checkout_draft['same_as_billing']) ? (bool) $checkout_draft['same_as_billing'] : TRUE;
+    $selected_plan = !empty($checkout_draft['payment_plan']) && $checkout_draft['payment_plan'] === 'monthly' ? 'monthly' : 'one_time';
+    $one_time = $checkout_plan_options['one_time'];
+    $monthly = $checkout_plan_options['monthly'];
     ?>
 
     <section class="checkout-section">
@@ -83,40 +85,23 @@
 
                     <section class="checkout-card">
                         <div class="checkout-card-head">
-                            <h2>Payment Method</h2>
+                            <h2>Payment Plan</h2>
                         </div>
 
-                        <div class="checkout-payment-list">
-                            <div class="checkout-payment-option">
-                                <span class="checkout-radio"></span>
-                                <span class="checkout-payment-copy">
-                                    <strong>Invoice</strong>
-                                </span>
-                            </div>
-
-                            <button type="button" class="checkout-payment-option is-active" data-modal-open="payment-modal">
-                                <span class="checkout-radio is-active"></span>
-                                <span class="checkout-payment-copy">
-                                    <strong>Card Payment</strong>
-                                    <small><?php echo !empty($payment['last4']) ? '•••• •••• •••• ' . html_escape($payment['last4']) : 'Add Stripe card details'; ?></small>
-                                </span>
-                                <span class="checkout-inline-link">Edit</span>
-                            </button>
-
-                            <div class="checkout-payment-option">
-                                <span class="checkout-radio"></span>
-                                <span class="checkout-payment-copy">
-                                    <strong>Klarna</strong>
-                                </span>
-                            </div>
-
-                            <div class="checkout-payment-option">
-                                <span class="checkout-radio"></span>
-                                <span class="checkout-payment-copy">
-                                    <strong>Apple Pay</strong>
-                                </span>
-                            </div>
+                        <div class="checkout-plan-inline">
+                            <article class="checkout-plan-inline-card <?php echo $selected_plan === 'one_time' ? 'is-active' : ''; ?>">
+                                <strong>One-Time Payment</strong>
+                                <span>Pay the full campaign amount at once.</span>
+                                <b><?php echo $checkout_summary['currency']; ?> <?php echo number_format($one_time['amount_paid_now'], 2); ?></b>
+                            </article>
+                            <article class="checkout-plan-inline-card <?php echo $selected_plan === 'monthly' ? 'is-active' : ''; ?>">
+                                <strong>Monthly Payment</strong>
+                                <span><?php echo $checkout_summary['currency']; ?> <?php echo number_format($monthly['monthly_amount'], 2); ?> / month for <?php echo (int) $monthly['months']; ?> months.</span>
+                                <b><?php echo $checkout_summary['currency']; ?> <?php echo number_format($monthly['amount_paid_now'], 2); ?> today</b>
+                            </article>
                         </div>
+
+                        <p class="checkout-muted checkout-payment-skip-note">Payment collection is simulated for now. We still save the selected plan and payment snapshot in the database for future Stripe integration.</p>
                     </section>
                 </div>
 
@@ -157,8 +142,9 @@
                         <strong><?php echo $checkout_summary['currency']; ?> <?php echo number_format($checkout_summary['grand_total'], 2); ?></strong>
                     </div>
 
-                    <form action="<?php echo site_url('booking/place_order'); ?>" method="post" class="checkout-order-form">
-                        <button type="submit" class="header-button full-button">Order Now</button>
+                    <form action="<?php echo site_url('booking/place_order'); ?>" method="post" class="checkout-order-form" id="checkout-order-form">
+                        <input type="hidden" name="payment_plan" value="<?php echo html_escape($selected_plan); ?>" id="checkout-payment-plan-input">
+                        <button type="button" class="header-button full-button" id="checkout-open-plan-modal">Order Now</button>
                         <label class="checkout-terms-row">
                             <input type="checkbox" name="accept_terms" value="1">
                             <span>I agree to the Terms &amp; Conditions and Privacy Policy of Kinoblick.</span>
@@ -276,43 +262,54 @@
         </div>
     </div>
 
-    <div class="checkout-modal" id="payment-modal" hidden>
+    <div class="checkout-modal" id="plan-modal" hidden>
         <div class="checkout-modal-backdrop" data-modal-close></div>
-        <div class="checkout-modal-dialog checkout-modal-dialog-small">
+        <div class="checkout-modal-dialog checkout-plan-dialog">
             <div class="checkout-modal-head">
-                <h2>Card Details</h2>
+                <div>
+                    <h2>Choose Your Payment Plan</h2>
+                    <p>Select how you would like to pay for your cinema advertising campaign.</p>
+                </div>
                 <button type="button" data-modal-close>&times;</button>
             </div>
 
-            <form action="<?php echo site_url('booking/checkout'); ?>" method="post" class="checkout-modal-form">
-                <input type="hidden" name="form_action" value="payment">
-                <label>
-                    <span>Cardholder Name</span>
-                    <input type="text" name="cardholder_name" value="<?php echo html_escape($payment['cardholder_name'] ?? ''); ?>" placeholder="Max Mustermann">
-                </label>
-                <label>
-                    <span>Card Number</span>
-                    <input type="text" name="card_number" value="" placeholder="0000 0000 0000 0000">
-                </label>
-                <div class="checkout-field-grid">
-                    <label>
-                        <span>Expiry Month</span>
-                        <input type="text" name="expiry_month" value="<?php echo html_escape($payment['expiry_month'] ?? ''); ?>" placeholder="09">
-                    </label>
-                    <label>
-                        <span>Expiry Year</span>
-                        <input type="text" name="expiry_year" value="<?php echo html_escape($payment['expiry_year'] ?? ''); ?>" placeholder="27">
-                    </label>
-                </div>
-                <label class="checkout-checkbox-row checkout-checkbox-row-tight">
-                    <input type="checkbox" checked disabled>
-                    <span>Save card for future bookings</span>
-                </label>
-                <div class="checkout-modal-actions">
-                    <button type="button" class="light-button" data-modal-close>Cancel</button>
-                    <button type="submit" class="dark-button">Save Card</button>
-                </div>
-            </form>
+            <div class="checkout-plan-switcher">
+                <button type="button" class="checkout-plan-tab <?php echo $selected_plan === 'one_time' ? 'is-active' : ''; ?>" data-plan-tab="one_time">One-Time Payment</button>
+                <button type="button" class="checkout-plan-tab <?php echo $selected_plan === 'monthly' ? 'is-active' : ''; ?>" data-plan-tab="monthly">Monthly Payment</button>
+            </div>
+
+            <div class="checkout-plan-grid">
+                <article class="checkout-plan-card <?php echo $selected_plan === 'one_time' ? 'is-active' : ''; ?>" data-plan-card="one_time">
+                    <div class="checkout-plan-card-top">
+                        <strong>Pay in Full</strong>
+                        <span class="checkout-plan-indicator"></span>
+                    </div>
+                    <ul class="checkout-plan-features">
+                        <li>Lower overall cost</li>
+                        <li>One invoice</li>
+                        <li>Faster processing</li>
+                    </ul>
+                    <small>Total amount</small>
+                    <h3><?php echo $checkout_summary['currency']; ?> <?php echo number_format($one_time['amount_paid_now'], 0); ?></h3>
+                    <button type="button" class="header-button full-button" data-submit-plan="one_time">Make One-Time Payment</button>
+                </article>
+
+                <article class="checkout-plan-card <?php echo $selected_plan === 'monthly' ? 'is-active' : ''; ?>" data-plan-card="monthly">
+                    <div class="checkout-plan-card-top">
+                        <strong>Pay Monthly</strong>
+                        <span class="checkout-plan-indicator"></span>
+                    </div>
+                    <ul class="checkout-plan-features">
+                        <li>Spread cost over campaign duration</li>
+                        <li>Easier budgeting</li>
+                        <li>Flexible planning</li>
+                    </ul>
+                    <small>Monthly amount</small>
+                    <h3><?php echo $checkout_summary['currency']; ?> <?php echo number_format($monthly['monthly_amount'], 0); ?></h3>
+                    <p><?php echo (int) $monthly['months']; ?> months</p>
+                    <button type="button" class="header-button full-button" data-submit-plan="monthly">Continue with Monthly Plan</button>
+                </article>
+            </div>
         </div>
     </div>
 
@@ -323,24 +320,47 @@
         var sameAsBilling = document.querySelector('[data-same-as-billing]');
         var deliveryPanel = document.querySelector('[data-delivery-panel]');
         var deliveryToggleForm = document.getElementById('delivery-toggle-form');
+        var openPlanModal = document.getElementById('checkout-open-plan-modal');
+        var planModal = document.getElementById('plan-modal');
+        var orderForm = document.getElementById('checkout-order-form');
+        var planInput = document.getElementById('checkout-payment-plan-input');
+        var planTabs = document.querySelectorAll('[data-plan-tab]');
+        var planCards = document.querySelectorAll('[data-plan-card]');
+        var planSubmitButtons = document.querySelectorAll('[data-submit-plan]');
+
+        function openModal(modal) {
+            if (modal) {
+                modal.hidden = false;
+                document.body.classList.add('checkout-modal-open');
+            }
+        }
+
+        function closeModal(modal) {
+            if (modal) {
+                modal.hidden = true;
+            }
+            document.body.classList.remove('checkout-modal-open');
+        }
+
+        function syncPlanState(plan) {
+            planInput.value = plan;
+            planTabs.forEach(function (tab) {
+                tab.classList.toggle('is-active', tab.getAttribute('data-plan-tab') === plan);
+            });
+            planCards.forEach(function (card) {
+                card.classList.toggle('is-active', card.getAttribute('data-plan-card') === plan);
+            });
+        }
 
         modalButtons.forEach(function (button) {
             button.addEventListener('click', function () {
-                var modal = document.getElementById(button.getAttribute('data-modal-open'));
-                if (modal) {
-                    modal.hidden = false;
-                    document.body.classList.add('checkout-modal-open');
-                }
+                openModal(document.getElementById(button.getAttribute('data-modal-open')));
             });
         });
 
         closeButtons.forEach(function (button) {
             button.addEventListener('click', function () {
-                var modal = button.closest('.checkout-modal');
-                if (modal) {
-                    modal.hidden = true;
-                }
-                document.body.classList.remove('checkout-modal-open');
+                closeModal(button.closest('.checkout-modal'));
             });
         });
 
@@ -350,6 +370,29 @@
                 deliveryToggleForm.submit();
             });
         }
+
+        if (openPlanModal) {
+            openPlanModal.addEventListener('click', function () {
+                openModal(planModal);
+            });
+        }
+
+        planTabs.forEach(function (tab) {
+            tab.addEventListener('click', function () {
+                syncPlanState(tab.getAttribute('data-plan-tab'));
+            });
+        });
+
+        planSubmitButtons.forEach(function (button) {
+            button.addEventListener('click', function () {
+                syncPlanState(button.getAttribute('data-submit-plan'));
+                if (orderForm) {
+                    orderForm.submit();
+                }
+            });
+        });
+
+        syncPlanState('<?php echo $selected_plan; ?>');
     });
     </script>
 </main>

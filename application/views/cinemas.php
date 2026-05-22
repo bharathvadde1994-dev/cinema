@@ -3,6 +3,21 @@
     $selected_state = !empty($filters['state']) ? $filters['state'] : '';
     $selected_cinema_filter = !empty($filters['cinema']) ? $filters['cinema'] : '';
     $keyword_value = !empty($filters['keyword']) ? $filters['keyword'] : '';
+    $map_cinemas = array();
+    foreach ($cinemas as $cinema_item) {
+        if ($cinema_item['latitude'] === NULL || $cinema_item['longitude'] === NULL) {
+            continue;
+        }
+
+        $map_cinemas[] = array(
+            'slug' => $cinema_item['slug'],
+            'name' => $cinema_item['name'],
+            'lat' => (float) $cinema_item['latitude'],
+            'lng' => (float) $cinema_item['longitude'],
+            'location_label' => $cinema_item['location_label'],
+            'starting_price_label' => $cinema_item['starting_price_label'],
+        );
+    }
     ?>
     <section class="cinema-directory-section">
         <div class="content-shell">
@@ -143,19 +158,12 @@
                             <div class="directory-map-badge badge-left">Search this area</div>
                             <div class="directory-map-badge badge-right">Search this area</div>
                             <div class="directory-map-canvas" data-cinema-map>
-                                <div class="directory-map-grid"></div>
-                                <?php foreach ($cinemas as $cinema): ?>
-                                    <button
-                                        class="directory-map-marker"
-                                        type="button"
-                                        data-marker="<?php echo html_escape($cinema['slug']); ?>"
-                                        data-lat="<?php echo html_escape($cinema['latitude']); ?>"
-                                        data-lng="<?php echo html_escape($cinema['longitude']); ?>"
-                                        title="<?php echo html_escape($cinema['name']); ?>"
-                                    >
-                                        <span></span>
-                                    </button>
-                                <?php endforeach; ?>
+                                <?php if (empty($google_maps_api_key)): ?>
+                                    <div class="directory-map-message">
+                                        <h3>Google Map is not configured yet</h3>
+                                        <p>Add your Google Maps API key in `application/config/google_maps.php` or the `GOOGLE_MAPS_API_KEY` environment variable to enable Map View.</p>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -177,16 +185,171 @@ document.addEventListener('DOMContentLoaded', function () {
     var viewButtons = document.querySelectorAll('[data-view-button]');
     var viewPanels = document.querySelectorAll('[data-view-panel]');
     var selectAll = document.querySelector('[data-select-all]');
-        var selectionCount = document.querySelector('[data-selection-count]');
-        var bookingButton = document.querySelector('[data-book-selection]');
-        var checkboxes = document.querySelectorAll('[data-cinema-select]');
-    var markers = document.querySelectorAll('[data-marker]');
+    var selectionCount = document.querySelector('[data-selection-count]');
+    var bookingButton = document.querySelector('[data-book-selection]');
+    var checkboxes = document.querySelectorAll('[data-cinema-select]');
     var focusButtons = document.querySelectorAll('[data-focus-button]');
     var mapCanvas = document.querySelector('[data-cinema-map]');
     var focusSlug = <?php echo json_encode($focus_slug); ?>;
     var initialView = <?php echo json_encode($directory_view); ?>;
     var totalCinemas = <?php echo count($cinemas); ?>;
+    var mapApiKey = <?php echo json_encode($google_maps_api_key); ?>;
+    var mapId = <?php echo json_encode($google_maps_map_id); ?>;
+    var cinemas = <?php echo json_encode($map_cinemas); ?>;
     var selected = {};
+    var mapInstance = null;
+    var infoWindow = null;
+    var googleMarkers = {};
+
+    function updateMapMarkerState() {
+        Object.keys(googleMarkers).forEach(function (slug) {
+            var marker = googleMarkers[slug];
+            var isSelected = !!selected[slug];
+            var isFocused = marker.__isFocused === true;
+            var pinColor = isFocused || isSelected ? '#b72431' : '#ea6a74';
+            var scale = isFocused ? 1.22 : 1;
+
+            if (marker.__iconElement) {
+                marker.__iconElement.style.transform = 'translateY(-50%) scale(' + scale + ')';
+                marker.__iconElement.style.filter = isFocused ? 'drop-shadow(0 10px 20px rgba(183, 36, 49, 0.26))' : 'drop-shadow(0 8px 18px rgba(17, 24, 39, 0.18))';
+                marker.__iconElement.innerHTML = '<span style="display:block;width:18px;height:18px;border-radius:50% 50% 50% 0;background:' + pinColor + ';transform:rotate(-45deg);"></span>';
+            } else if (marker.setIcon) {
+                marker.setIcon({
+                    path: google.maps.SymbolPath.CIRCLE,
+                    fillColor: pinColor,
+                    fillOpacity: 1,
+                    strokeColor: '#ffffff',
+                    strokeWeight: 2,
+                    scale: isFocused ? 10 : 8
+                });
+                marker.setZIndex(isFocused ? 999 : (isSelected ? 600 : 100));
+            }
+        });
+    }
+
+    function openMarkerInfo(cinema) {
+        if (!infoWindow || !mapInstance) {
+            return;
+        }
+
+        infoWindow.setContent(
+            '<div class="directory-map-info-window">' +
+                '<strong>' + cinema.name + '</strong>' +
+                '<span>' + cinema.location_label + '</span>' +
+                '<span>' + cinema.starting_price_label + '</span>' +
+            '</div>'
+        );
+
+        if (googleMarkers[cinema.slug]) {
+            infoWindow.open({
+                map: mapInstance,
+                anchor: googleMarkers[cinema.slug]
+            });
+        }
+    }
+
+    function loadGoogleMapsScript() {
+        return new Promise(function (resolve, reject) {
+            if (window.google && window.google.maps) {
+                resolve();
+                return;
+            }
+
+            var existing = document.querySelector('script[data-google-maps-script]');
+            if (existing) {
+                existing.addEventListener('load', resolve, { once: true });
+                existing.addEventListener('error', reject, { once: true });
+                return;
+            }
+
+            var script = document.createElement('script');
+            script.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(mapApiKey) + '&libraries=marker';
+            script.async = true;
+            script.defer = true;
+            script.setAttribute('data-google-maps-script', '1');
+            script.addEventListener('load', resolve, { once: true });
+            script.addEventListener('error', reject, { once: true });
+            document.head.appendChild(script);
+        });
+    }
+
+    function buildAdvancedMarkerElement(color) {
+        var wrapper = document.createElement('div');
+        wrapper.className = 'directory-google-marker';
+        wrapper.innerHTML = '<span style="display:block;width:18px;height:18px;border-radius:50% 50% 50% 0;background:' + color + ';transform:rotate(-45deg);"></span>';
+        return wrapper;
+    }
+
+    function initGoogleMap() {
+        if (!mapCanvas || !mapApiKey || !cinemas.length || !(window.google && window.google.maps)) {
+            return;
+        }
+
+        mapCanvas.innerHTML = '';
+
+        mapInstance = new google.maps.Map(mapCanvas, {
+            zoom: 6,
+            center: { lat: cinemas[0].lat, lng: cinemas[0].lng },
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+            mapId: mapId || undefined
+        });
+
+        infoWindow = new google.maps.InfoWindow();
+        var bounds = new google.maps.LatLngBounds();
+        var supportsAdvanced = !!(google.maps.marker && google.maps.marker.AdvancedMarkerElement && mapId);
+
+        cinemas.forEach(function (cinema) {
+            var marker;
+
+            if (supportsAdvanced) {
+                var content = buildAdvancedMarkerElement('#ea6a74');
+                marker = new google.maps.marker.AdvancedMarkerElement({
+                    map: mapInstance,
+                    position: { lat: cinema.lat, lng: cinema.lng },
+                    title: cinema.name,
+                    content: content
+                });
+                marker.__iconElement = content;
+                marker.addListener('click', function () {
+                    focusCinema(cinema.slug);
+                });
+            } else {
+                marker = new google.maps.Marker({
+                    map: mapInstance,
+                    position: { lat: cinema.lat, lng: cinema.lng },
+                    title: cinema.name,
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        fillColor: '#ea6a74',
+                        fillOpacity: 1,
+                        strokeColor: '#ffffff',
+                        strokeWeight: 2,
+                        scale: 8
+                    }
+                });
+                marker.addListener('click', function () {
+                    focusCinema(cinema.slug);
+                });
+            }
+
+            marker.__isFocused = false;
+            marker.__cinema = cinema;
+            googleMarkers[cinema.slug] = marker;
+            bounds.extend({ lat: cinema.lat, lng: cinema.lng });
+        });
+
+        if (!bounds.isEmpty()) {
+            mapInstance.fitBounds(bounds, 60);
+        }
+
+        updateMapMarkerState();
+
+        if (focusSlug) {
+            focusCinema(focusSlug);
+        }
+    }
 
     function setView(viewName) {
         viewButtons.forEach(function (button) {
@@ -216,17 +379,13 @@ document.addEventListener('DOMContentLoaded', function () {
             checkbox.closest('[data-cinema-card]').classList.toggle('is-selected', isChecked);
         });
 
-        markers.forEach(function (marker) {
-            marker.classList.toggle('is-selected', !!selected[marker.getAttribute('data-marker')]);
-        });
-
         if (selectionCount) {
             selectionCount.textContent = total;
         }
 
         if (bookingButton) {
-            bookingButton.disabled = total !== 1;
-            bookingButton.innerHTML = (total > 1 ? 'Single cinema only' : 'Book Selection') + ' (<span data-selection-count>' + total + '</span>)';
+            bookingButton.disabled = total === 0;
+            bookingButton.innerHTML = 'Book Selection (<span data-selection-count>' + total + '</span>)';
             selectionCount = bookingButton.querySelector('[data-selection-count]');
         }
 
@@ -234,6 +393,8 @@ document.addEventListener('DOMContentLoaded', function () {
             selectAll.checked = total > 0 && total === totalCinemas;
             selectAll.indeterminate = total > 0 && total < totalCinemas;
         }
+
+        updateMapMarkerState();
     }
 
     function toggleSelection(slug, value) {
@@ -262,11 +423,19 @@ document.addEventListener('DOMContentLoaded', function () {
             card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         });
 
-        var marker = document.querySelector('[data-marker="' + slug + '"]');
+        Object.keys(googleMarkers).forEach(function (markerSlug) {
+            googleMarkers[markerSlug].__isFocused = markerSlug === slug;
+        });
+        updateMapMarkerState();
 
-        if (marker) {
-            marker.classList.add('is-focused');
-            marker.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+        var marker = googleMarkers[slug];
+
+        if (marker && marker.__cinema) {
+            if (mapInstance) {
+                mapInstance.panTo({ lat: marker.__cinema.lat, lng: marker.__cinema.lng });
+                mapInstance.setZoom(Math.max(mapInstance.getZoom() || 10, 11));
+                openMarkerInfo(marker.__cinema);
+            }
         }
     }
 
@@ -296,15 +465,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-        if (bookingButton) {
-            bookingButton.addEventListener('click', function () {
-                var slugs = Object.keys(selected);
+    if (bookingButton) {
+        bookingButton.addEventListener('click', function () {
+            var slugs = Object.keys(selected);
 
-            if (slugs.length !== 1) {
+            if (slugs.length === 0) {
                 return;
             }
 
-            window.location.href = <?php echo json_encode(site_url('booking')); ?> + '?cinemas=' + encodeURIComponent(slugs[0]);
+            window.location.href = <?php echo json_encode(site_url('booking')); ?> + '?cinemas=' + encodeURIComponent(slugs.join(','));
         });
     }
 
@@ -314,46 +483,16 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    markers.forEach(function (marker) {
-        marker.addEventListener('click', function () {
-            focusCinema(marker.getAttribute('data-marker'));
-        });
-    });
-
-    if (mapCanvas && markers.length) {
-        var minLat = Infinity;
-        var maxLat = -Infinity;
-        var minLng = Infinity;
-        var maxLng = -Infinity;
-
-        markers.forEach(function (marker) {
-            var lat = parseFloat(marker.getAttribute('data-lat'));
-            var lng = parseFloat(marker.getAttribute('data-lng'));
-
-            minLat = Math.min(minLat, lat);
-            maxLat = Math.max(maxLat, lat);
-            minLng = Math.min(minLng, lng);
-            maxLng = Math.max(maxLng, lng);
-        });
-
-        var latRange = Math.max(0.2, maxLat - minLat);
-        var lngRange = Math.max(0.2, maxLng - minLng);
-
-        markers.forEach(function (marker) {
-            var lat = parseFloat(marker.getAttribute('data-lat'));
-            var lng = parseFloat(marker.getAttribute('data-lng'));
-            var top = 10 + ((maxLat - lat) / latRange) * 78;
-            var left = 8 + ((lng - minLng) / lngRange) * 82;
-
-            marker.style.top = top + '%';
-            marker.style.left = left + '%';
-        });
-    }
-
     setView(initialView);
     syncSelectedState();
 
-    if (focusSlug) {
+    if (mapApiKey && cinemas.length) {
+        loadGoogleMapsScript().then(initGoogleMap).catch(function () {
+            if (mapCanvas) {
+                mapCanvas.innerHTML = '<div class="directory-map-message"><h3>Google Map failed to load</h3><p>Check your API key, billing, referrer restrictions, and authorized domains.</p></div>';
+            }
+        });
+    } else if (focusSlug) {
         focusCinema(focusSlug);
     }
 });

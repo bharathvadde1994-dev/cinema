@@ -20,9 +20,13 @@
                 <?php echo validation_errors('<div class="form-error">', '</div>'); ?>
 
                 <?php echo form_open(site_url('auth/signup/details'), array('class' => 'auth-v2-form')); ?>
+                    <?php
+                    $google_full_name = !empty($signup_google_profile['full_name']) ? $signup_google_profile['full_name'] : '';
+                    $google_company_name = !empty($signup_google_profile['company_name']) ? $signup_google_profile['company_name'] : '';
+                    ?>
                     <label class="auth-v2-row">
                         <span>Full Name</span>
-                        <input type="text" name="full_name" value="<?php echo set_value('full_name'); ?>" placeholder="Enter your full name">
+                        <input type="text" name="full_name" value="<?php echo set_value('full_name', $google_full_name); ?>" placeholder="Enter your full name">
                     </label>
                     <label class="auth-v2-row">
                         <span>Salutation</span>
@@ -36,7 +40,7 @@
                     </label>
                     <label class="auth-v2-row">
                         <span>Company Name</span>
-                        <input type="text" name="company_name" value="<?php echo set_value('company_name'); ?>" placeholder="Enter your company name">
+                        <input type="text" name="company_name" value="<?php echo set_value('company_name', $google_company_name); ?>" placeholder="Enter your company name">
                     </label>
                     <label class="auth-v2-row">
                         <span>VAT ID</span>

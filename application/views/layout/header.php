@@ -9,7 +9,9 @@
 <body class="<?php echo !empty($body_class) ? $body_class : ''; ?>" id="page-top">
     <?php
     $home_anchor = site_url('');
-    $cart_url = !empty($has_checkout_draft) ? site_url('booking/checkout') : site_url('booking');
+    $cart_url = !empty($has_multi_cart)
+        ? site_url('booking/cart')
+        : (!empty($has_checkout_draft) ? site_url('booking/checkout') : site_url('booking'));
     ?>
     <header class="site-header">
         <div class="content-shell header-shell">
