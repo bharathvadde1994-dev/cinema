@@ -14,6 +14,7 @@ class Welcome extends MY_Controller
             'active_nav' => 'home',
             'hero' => $home['hero'],
             'stats' => $home['stats'],
+            'promotions' => $home['promotions'],
             'steps' => $home['steps'],
             'cities' => $home['cities'],
             'states' => $home['states'],

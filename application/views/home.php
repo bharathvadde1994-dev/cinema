@@ -186,15 +186,90 @@
                     </article>
                 <?php endforeach; ?>
             </div>
+        </div>
+    </section>
 
+    <section class="promotions-section" id="promotions">
+        <div class="content-shell">
+            <div class="section-intro center-intro">
+                <h2>Current Promotions</h2>
+                <p>Discover ready-to-book cinema advertising packages with pre-configured cinema selections, optimized hall setups, and special promotional pricing.</p>
+            </div>
+
+            <div class="promo-grid">
+                <?php foreach ($promotions as $promotion): ?>
+                    <article class="promo-card">
+                        <div class="promo-icon">
+                            <?php if ($promotion['icon'] === 'screen'): ?>
+                                <svg viewBox="0 0 24 24" focusable="false">
+                                    <rect x="5" y="4" width="14" height="16" rx="2.4" fill="none" stroke="currentColor" stroke-width="1.7"></rect>
+                                    <path d="M9 4v16M15 4v16M5 9h14M5 15h14" fill="none" stroke="currentColor" stroke-width="1.4"></path>
+                                </svg>
+                            <?php elseif ($promotion['icon'] === 'clapper'): ?>
+                                <svg viewBox="0 0 24 24" focusable="false">
+                                    <path d="M6 9h12v9a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2Z" fill="none" stroke="currentColor" stroke-width="1.7"></path>
+                                    <path d="m6 9 2.2-4h9.3L20 9M9 5l2.1 4M13 5l2 4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                            <?php elseif ($promotion['icon'] === 'play'): ?>
+                                <svg viewBox="0 0 24 24" focusable="false">
+                                    <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.7"></circle>
+                                    <path d="m10 8.8 5.2 3.2-5.2 3.2z" fill="currentColor"></path>
+                                </svg>
+                            <?php else: ?>
+                                <svg viewBox="0 0 24 24" focusable="false">
+                                    <path d="M7 8h2.3l1.2-2h3l1.2 2H17a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"></path>
+                                    <circle cx="12" cy="13" r="2.8" fill="none" stroke="currentColor" stroke-width="1.7"></circle>
+                                </svg>
+                            <?php endif; ?>
+                        </div>
+
+                        <h3><?php echo html_escape($promotion['title']); ?></h3>
+                        <strong><?php echo html_escape($promotion['price']); ?></strong>
+                        <span><?php echo html_escape($promotion['period']); ?></span>
+
+                        <ul class="promo-feature-list">
+                            <?php foreach ($promotion['features'] as $feature): ?>
+                                <li><?php echo html_escape($feature); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+
+                        <p class="promo-note"><?php echo html_escape($promotion['note']); ?></p>
+                        <a class="promo-button" href="<?php echo site_url('booking'); ?>">Book Now</a>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </section>
+
+    <section class="metrics-section" id="metrics">
+        <div class="content-shell">
             <div class="stats-grid">
                 <?php foreach ($stats as $stat): ?>
                     <article class="metric-card">
                         <div class="metric-icon">
-                            <svg viewBox="0 0 24 24" focusable="false">
-                                <path d="M5 16.5 10 11l3 3 6-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-                                <path d="M14 8h5v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
-                            </svg>
+                            <?php if ($stat['icon'] === 'trend'): ?>
+                                <svg viewBox="0 0 24 24" focusable="false">
+                                    <path d="M5 16.5 10 11l3 3 6-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                    <path d="M14 8h5v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                                </svg>
+                            <?php elseif ($stat['icon'] === 'screen'): ?>
+                                <svg viewBox="0 0 24 24" focusable="false">
+                                    <rect x="4" y="5" width="16" height="11" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.8"></rect>
+                                    <path d="M9 19h6M12 16v3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                                    <path d="m10 9 4 2.5-4 2.5z" fill="currentColor"></path>
+                                </svg>
+                            <?php elseif ($stat['icon'] === 'target'): ?>
+                                <svg viewBox="0 0 24 24" focusable="false">
+                                    <circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" stroke-width="1.8"></circle>
+                                    <circle cx="12" cy="12" r="3.8" fill="none" stroke="currentColor" stroke-width="1.8"></circle>
+                                    <circle cx="12" cy="12" r="1.2" fill="currentColor"></circle>
+                                </svg>
+                            <?php else: ?>
+                                <svg viewBox="0 0 24 24" focusable="false">
+                                    <path d="m12 5 5 2.3v4.5c0 3.6-2.1 6.7-5 7.9-2.9-1.2-5-4.3-5-7.9V7.3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+                                    <circle cx="12" cy="11" r="1.9" fill="none" stroke="currentColor" stroke-width="1.8"></circle>
+                                </svg>
+                            <?php endif; ?>
                         </div>
                         <strong><?php echo html_escape($stat['value']); ?></strong>
                         <span><?php echo html_escape($stat['label']); ?></span>
@@ -212,78 +287,35 @@
                     <h2><?php echo html_escape($showcase['title']); ?></h2>
                     <p><?php echo html_escape($showcase['copy']); ?></p>
                 </div>
-                <a class="inline-link" href="<?php echo site_url('cinemas'); ?>"><?php echo html_escape($showcase['cta']); ?></a>
+                <a class="inline-link" href="<?php echo site_url('cinemas'); ?>"><?php echo html_escape($showcase['cta']); ?>&#8594;</a>
             </div>
 
-            <div class="showcase-slider" data-showcase-slider>
-                <button class="showcase-nav showcase-nav-prev" type="button" aria-label="Previous slide" data-slider-prev>
-                    <span>&lsaquo;</span>
-                </button>
-                <div class="showcase-viewport" data-slider-viewport>
-                    <div class="showcase-stage">
-                        <?php foreach ($showcase['cards'] as $card): ?>
-                            <article class="showcase-card showcase-card-<?php echo html_escape($card['variant']); ?>">
+            <div class="showcase-slider" data-showcase-slider tabindex="0" aria-label="Cinema poster slider">
+                <div class="showcase-stage" data-slider-track>
+                    <?php foreach ($showcase['cards'] as $index => $card): ?>
+                        <button
+                            class="showcase-poster"
+                            type="button"
+                            data-slider-card
+                            data-index="<?php echo (int) $index; ?>"
+                            aria-label="<?php echo html_escape($card['title']); ?>"
+                        >
+                            <span class="showcase-poster-frame showcase-poster-<?php echo html_escape($card['variant']); ?>">
                                 <?php if (!empty($card['image'])): ?>
                                     <img src="<?php echo base_url($card['image']); ?>" alt="<?php echo html_escape($card['title']); ?>">
-                                    <div class="showcase-play">
+                                    <span class="showcase-play">
                                         <svg viewBox="0 0 24 24" focusable="false">
                                             <circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" stroke-width="1.5"></circle>
                                             <path d="m10 8.8 6 3.2-6 3.2z" fill="currentColor"></path>
                                         </svg>
-                                    </div>
+                                    </span>
                                 <?php else: ?>
-                                    <span><?php echo html_escape($card['title']); ?></span>
+                                    <span class="showcase-poster-text"><?php echo html_escape($card['title']); ?></span>
                                 <?php endif; ?>
-                            </article>
-                        <?php endforeach; ?>
-                    </div>
+                            </span>
+                        </button>
+                    <?php endforeach; ?>
                 </div>
-                <button class="showcase-nav showcase-nav-next" type="button" aria-label="Next slide" data-slider-next>
-                    <span>&rsaquo;</span>
-                </button>
-            </div>
-        </div>
-    </section>
-
-    <section class="why-us-section" id="why-us">
-        <div class="content-shell why-us-shell">
-            <div class="why-us-copy">
-                <h2>Why Choose Us<br><span>for Local Advertising?</span></h2>
-                <p>Cinema advertising guarantees a captive audience. When the lights go down, phones go away, and all eyes are on the big screen. We make accessing this premium inventory easy and affordable for local businesses.</p>
-                <div class="why-us-actions">
-                    <a class="dark-button" href="<?php echo site_url('booking'); ?>">View Pricing</a>
-                    <a class="light-button" href="<?php echo $home_anchor; ?>#showcase">Read Case Studies</a>
-                </div>
-            </div>
-
-            <div class="benefit-grid">
-                <?php foreach ($benefits as $benefit): ?>
-                    <article class="benefit-card">
-                        <div class="benefit-icon">
-                            <?php if ($benefit['icon'] === 'target'): ?>
-                                <svg viewBox="0 0 24 24" focusable="false">
-                                    <circle cx="12" cy="12" r="6.5" fill="none" stroke="currentColor" stroke-width="1.7"></circle>
-                                    <circle cx="12" cy="12" r="2.4" fill="none" stroke="currentColor" stroke-width="1.7"></circle>
-                                </svg>
-                            <?php elseif ($benefit['icon'] === 'check'): ?>
-                                <svg viewBox="0 0 24 24" focusable="false">
-                                    <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.7"></circle>
-                                    <path d="m8.5 12.4 2.2 2.2 4.8-5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
-                                </svg>
-                            <?php elseif ($benefit['icon'] === 'flash'): ?>
-                                <svg viewBox="0 0 24 24" focusable="false">
-                                    <path d="M13.4 3 6 13h4l-1 8 7.4-10H12l1.4-8Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"></path>
-                                </svg>
-                            <?php else: ?>
-                                <svg viewBox="0 0 24 24" focusable="false">
-                                    <path d="m12 4 2.3 4.4 4.9.7-3.5 3.4.8 4.8-4.5-2.3-4.5 2.3.8-4.8L4.8 9.1l4.9-.7Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"></path>
-                                </svg>
-                            <?php endif; ?>
-                        </div>
-                        <h3><?php echo html_escape($benefit['title']); ?></h3>
-                        <p><?php echo html_escape($benefit['description']); ?></p>
-                    </article>
-                <?php endforeach; ?>
             </div>
         </div>
     </section>
@@ -325,29 +357,87 @@ document.addEventListener('DOMContentLoaded', function () {
     var slider = document.querySelector('[data-showcase-slider]');
 
     if (slider) {
-        var viewport = slider.querySelector('[data-slider-viewport]');
-        var prev = slider.querySelector('[data-slider-prev]');
-        var next = slider.querySelector('[data-slider-next]');
-        var scrollAmount = function () {
-            return Math.max(280, Math.floor(viewport.clientWidth * 0.72));
-        };
-        var updateButtons = function () {
-            var maxScroll = viewport.scrollWidth - viewport.clientWidth - 4;
-            prev.disabled = viewport.scrollLeft <= 4;
-            next.disabled = viewport.scrollLeft >= maxScroll;
+        var cards = Array.prototype.slice.call(slider.querySelectorAll('[data-slider-card]'));
+        var activeIndex = Math.max(0, cards.findIndex(function (card) {
+            return card.querySelector('img');
+        }));
+        var startX = null;
+
+        var getOffset = function (index) {
+            var offset = index - activeIndex;
+            var half = Math.floor(cards.length / 2);
+
+            if (offset > half) {
+                offset -= cards.length;
+            }
+
+            if (offset < -half) {
+                offset += cards.length;
+            }
+
+            return offset;
         };
 
-        prev.addEventListener('click', function () {
-            viewport.scrollBy({ left: -scrollAmount(), behavior: 'smooth' });
+        var renderSlider = function () {
+            cards.forEach(function (card, index) {
+                var offset = getOffset(index);
+                var isVisible = Math.abs(offset) <= 2;
+                card.style.setProperty('--offset', offset);
+                card.setAttribute('data-position', offset);
+                card.classList.toggle('is-active', offset === 0);
+                card.hidden = !isVisible;
+                card.tabIndex = offset === 0 ? 0 : -1;
+                card.setAttribute('aria-hidden', isVisible ? 'false' : 'true');
+            });
+        };
+
+        var setActive = function (index) {
+            activeIndex = (index + cards.length) % cards.length;
+            renderSlider();
+        };
+
+        cards.forEach(function (card, index) {
+            card.addEventListener('click', function () {
+                setActive(index);
+            });
         });
 
-        next.addEventListener('click', function () {
-            viewport.scrollBy({ left: scrollAmount(), behavior: 'smooth' });
+        slider.addEventListener('keydown', function (event) {
+            if (event.key === 'ArrowLeft') {
+                event.preventDefault();
+                setActive(activeIndex - 1);
+            }
+
+            if (event.key === 'ArrowRight') {
+                event.preventDefault();
+                setActive(activeIndex + 1);
+            }
         });
 
-        viewport.addEventListener('scroll', updateButtons, { passive: true });
-        window.addEventListener('resize', updateButtons);
-        updateButtons();
+        slider.addEventListener('pointerdown', function (event) {
+            startX = event.clientX;
+        });
+
+        slider.addEventListener('pointerup', function (event) {
+            if (startX === null) {
+                return;
+            }
+
+            var delta = event.clientX - startX;
+            startX = null;
+
+            if (Math.abs(delta) < 30) {
+                return;
+            }
+
+            setActive(activeIndex + (delta < 0 ? 1 : -1));
+        });
+
+        slider.addEventListener('pointercancel', function () {
+            startX = null;
+        });
+
+        renderSlider();
     }
 });
 </script>
