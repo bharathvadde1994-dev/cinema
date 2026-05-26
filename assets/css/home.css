@@ -10,6 +10,8 @@
     --red-deep: #93151d;
     --gold: #f1c44a;
     --shadow: 0 20px 40px rgba(17, 20, 26, 0.08);
+    --content-max-width: 1680px;
+    --content-max-width-wide: 1760px;
 }
 
 * {
@@ -44,7 +46,7 @@ img {
 }
 
 .content-shell {
-    width: min(100%, 1240px);
+    width: min(calc(100vw - 64px), var(--content-max-width));
     margin: 0 auto;
     padding-left: 32px;
     padding-right: 32px;
@@ -1272,6 +1274,7 @@ body {
 }
 
 .header-cart {
+    position: relative;
     display: inline-flex;
     align-items: center;
     gap: 10px;
@@ -1293,6 +1296,21 @@ body {
 .header-cart-icon svg {
     width: 100%;
     height: 100%;
+}
+
+.header-cart-badge {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #dfff67;
+    color: #1e2434;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1;
 }
 
 .homepage {
@@ -1372,7 +1390,7 @@ body {
 }
 
 .slot-search-card {
-    width: min(100%, 1100px);
+    width: 100%;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr)) 188px;
     gap: 16px;
@@ -3535,7 +3553,7 @@ body {
 }
 
 .account-page .content-shell {
-    width: min(100%, 1380px);
+    width: min(calc(100vw - 64px), var(--content-max-width-wide));
     padding-left: 44px;
     padding-right: 44px;
 }
@@ -4265,7 +4283,7 @@ body {
 
 .booking-success-shell,
 .booking-upload-shell {
-    width: min(100%, 1220px);
+    width: 100%;
 }
 
 .booking-success-grid {
@@ -4844,7 +4862,7 @@ body {
 }
 
 .booking-upload-shell-wide {
-    width: min(100%, 1380px);
+    width: 100%;
 }
 
 .booking-upload-head-wide {
@@ -5079,7 +5097,7 @@ body {
 .admin-auth-shell {
     display: grid;
     grid-template-columns: minmax(320px, 480px) minmax(360px, 700px);
-    width: min(100%, 1180px);
+    width: min(calc(100vw - 64px), 1320px);
     min-height: 710px;
     border-radius: 24px;
     overflow: hidden;
@@ -5843,5 +5861,78 @@ body {
     .admin-topbar-search input,
     .admin-toolbar-search input {
         max-width: none;
+    }
+}
+
+@media (max-width: 1024px) {
+    .content-shell {
+        width: min(calc(100vw - 40px), var(--content-max-width));
+        padding-left: 24px;
+        padding-right: 24px;
+    }
+
+    .account-page .content-shell {
+        width: min(calc(100vw - 40px), var(--content-max-width-wide));
+        padding-left: 24px;
+        padding-right: 24px;
+    }
+
+    .split-shell,
+    .split-shell-wide,
+    .section-heading-row,
+    .footer-shell,
+    .footer-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .journey-grid,
+    .package-grid,
+    .cinema-grid,
+    .benefit-grid,
+    .auth-v2-shell,
+    .account-shell,
+    .account-address-grid,
+    .account-form-grid,
+    .account-order-card,
+    .booking-config-shell,
+    .checkout-shell,
+    .booking-upload-grid,
+    .booking-success-grid.is-wide,
+    .checkout-plan-grid,
+    .checkout-plan-inline,
+    .booking-cart-shell,
+    .booking-upload-layout,
+    .directory-search-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .content-shell {
+        width: min(calc(100vw - 24px), var(--content-max-width));
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .account-page .content-shell {
+        width: min(calc(100vw - 24px), var(--content-max-width-wide));
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .slot-search-card,
+    .business-panel,
+    .why-us-shell,
+    .process-track,
+    .stats-grid,
+    .booking-success-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hero-actions > *,
+    .button-row > * {
+        width: 100%;
+        justify-content: center;
     }
 }

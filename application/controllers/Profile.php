@@ -6,7 +6,7 @@ class Profile extends MY_Controller
     public function __construct()
     {
         parent::__construct();
-        $this->require_auth();
+        $this->require_advertiser_auth();
     }
 
     public function index()
@@ -19,7 +19,7 @@ class Profile extends MY_Controller
 
     public function update()
     {
-        $this->require_auth();
+        $this->require_advertiser_auth();
 
         $this->form_validation->set_rules('full_name', 'Full name', 'trim|required|min_length[2]');
         $this->form_validation->set_rules('salutation', 'Salutation', 'trim|required|min_length[2]');

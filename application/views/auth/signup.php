@@ -9,6 +9,7 @@
 
                 <h1>Create Your Free Account</h1>
                 <p class="auth-v2-switch-copy">Already have an account? <a href="<?php echo site_url('auth/login'); ?>">Sign In</a></p>
+                <p class="auth-v2-switch-copy">Admin team? <a href="<?php echo site_url('admin/login'); ?>">Use Admin Login</a></p>
 
                 <?php echo validation_errors('<div class="form-error">', '</div>'); ?>
 
@@ -32,7 +33,7 @@
                     <button type="submit" class="auth-v2-submit">Sign Up with Email</button>
                 <?php echo form_close(); ?>
 
-                <p class="auth-v2-terms">By signing up, you agree to our Terms &amp; Privacy Policy.</p>
+                <p class="auth-v2-terms">We will send a 6-digit verification code to your email before the account becomes active.</p>
             </div>
 
             <div class="auth-v2-visual auth-v2-visual-signup"></div>

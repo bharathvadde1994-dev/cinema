@@ -7,6 +7,7 @@ class Cinemas extends MY_Controller
     {
         parent::__construct();
         $this->load->model('Cinema_model', 'cinema');
+        $this->redirect_admin_to_portal();
     }
 
     public function index()

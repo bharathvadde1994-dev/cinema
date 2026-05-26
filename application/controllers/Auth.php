@@ -16,19 +16,41 @@ class Auth extends MY_Controller
             $this->form_validation->set_rules('password', 'Password', 'required');
 
             if ($this->form_validation->run()) {
-                $user = $this->auth->verify_credentials(
-                    $this->input->post('email', TRUE),
-                    $this->input->post('password', FALSE)
-                );
+                $email = strtolower(trim((string) $this->input->post('email', TRUE)));
+                $password = (string) $this->input->post('password', FALSE);
+                $user = $this->auth->find_user_by_email($email);
 
-                if ($user) {
-                    $this->sign_in_user($user);
+                if (!$user || !password_verify($password, $user['password_hash'])) {
+                    $this->session->set_flashdata('error', 'Invalid email or password.');
+                    redirect('auth/login');
+                    return;
+                }
+
+                if ($user['role'] === 'admin') {
+                    $this->session->set_flashdata('error', 'Admin accounts must sign in from the admin login page.');
+                    redirect('admin/login');
+                    return;
+                }
+
+                if ($user['auth_provider'] === 'email' && empty($user['email_verified_at'])) {
+                    $delivery = $this->issue_email_verification($user);
+                    $this->session->set_userdata('pending_verify_email_user_id', (int) $user['id']);
+                    $this->session->set_flashdata($delivery['success'] ? 'success' : 'error', $delivery['message']);
+                    redirect('auth/verify_email');
+                    return;
+                }
+
+                if ($user['status'] !== 'active') {
+                    $this->session->set_flashdata('error', 'Your account is not active. Please contact support.');
+                    redirect('auth/login');
+                    return;
+                }
+
+                $signed_in_user = $this->auth->verify_credentials($email, $password);
+
+                if ($signed_in_user) {
+                    $this->sign_in_user($signed_in_user);
                     $this->session->set_flashdata('success', 'Welcome back.');
-
-                    if ($user['role'] === 'admin') {
-                        redirect('admin/bookings');
-                    }
-
                     $this->redirect_after_auth('profile');
                     return;
                 }
@@ -51,12 +73,26 @@ class Auth extends MY_Controller
         $this->require_guest();
 
         if ($this->input->method(TRUE) === 'POST' && $this->input->post('signup_stage', TRUE) === 'account') {
-            $this->form_validation->set_rules('email', 'Email', 'trim|required|valid_email|is_unique[users.email]');
+            $this->form_validation->set_rules('email', 'Email', 'trim|required|valid_email');
             $this->form_validation->set_rules('password', 'Password', 'required|min_length[8]');
 
             if ($this->form_validation->run()) {
+                $email = strtolower(trim((string) $this->input->post('email', TRUE)));
+                $existing_user = $this->auth->find_user_by_email($email);
+
+                if ($existing_user) {
+                    $message = $existing_user['role'] === 'admin'
+                        ? 'That email belongs to an admin account. Please use the admin login page.'
+                        : 'That email address is already in use. Please sign in instead.';
+                    $redirect = $existing_user['role'] === 'admin' ? 'admin/login' : 'auth/login';
+
+                    $this->session->set_flashdata('error', $message);
+                    redirect($redirect);
+                    return;
+                }
+
                 $this->session->set_userdata('signup_draft', array(
-                    'email' => $this->input->post('email', TRUE),
+                    'email' => $email,
                     'password' => $this->input->post('password', FALSE),
                     'auth_provider' => 'email',
                 ));
@@ -99,6 +135,21 @@ class Auth extends MY_Controller
             $this->form_validation->set_rules('business_type', 'Business type', 'trim|required|min_length[2]');
 
             if ($this->form_validation->run()) {
+                $existing_user = $this->auth->find_user_by_email($draft['email']);
+
+                if ($existing_user) {
+                    $this->session->unset_userdata('signup_draft');
+                    $this->session->unset_userdata('signup_google_profile');
+                    $message = $existing_user['role'] === 'admin'
+                        ? 'That email belongs to an admin account. Please use the admin login page.'
+                        : 'That email address is already in use. Please sign in instead.';
+                    $redirect = $existing_user['role'] === 'admin' ? 'admin/login' : 'auth/login';
+
+                    $this->session->set_flashdata('error', $message);
+                    redirect($redirect);
+                    return;
+                }
+
                 $full_name = preg_split('/\s+/', trim((string) $this->input->post('full_name', TRUE)));
                 $first_name = array_shift($full_name);
                 $last_name = !empty($full_name) ? implode(' ', $full_name) : 'User';
@@ -121,14 +172,25 @@ class Auth extends MY_Controller
                     'billing_postcode' => '',
                     'billing_country' => 'Germany',
                     'password' => $draft['password'],
+                    'status' => !empty($draft['auth_provider']) && $draft['auth_provider'] === 'google' ? 'active' : 'inactive',
+                    'email_verified_at' => !empty($draft['auth_provider']) && $draft['auth_provider'] === 'google' ? date('Y-m-d H:i:s') : NULL,
                 ));
 
                 if ($user) {
                     $this->session->unset_userdata('signup_draft');
                     $this->session->unset_userdata('signup_google_profile');
-                    $this->sign_in_user($user);
-                    $this->session->set_flashdata('success', 'Your account has been created.');
-                    $this->redirect_after_auth('profile');
+
+                    if (!empty($draft['auth_provider']) && $draft['auth_provider'] === 'google') {
+                        $this->sign_in_user($user);
+                        $this->session->set_flashdata('success', 'Your account has been created.');
+                        $this->redirect_after_auth('profile');
+                        return;
+                    }
+
+                    $delivery = $this->issue_email_verification($user);
+                    $this->session->set_userdata('pending_verify_email_user_id', (int) $user['id']);
+                    $this->session->set_flashdata($delivery['success'] ? 'success' : 'error', $delivery['message']);
+                    redirect('auth/verify_email');
                     return;
                 }
 
@@ -144,6 +206,183 @@ class Auth extends MY_Controller
             'hide_footer' => TRUE,
             'signup_email' => $draft['email'],
             'signup_google_profile' => is_array($google_profile) ? $google_profile : array(),
+        ));
+    }
+
+    public function verify_email()
+    {
+        $this->require_guest();
+
+        $user_id = (int) $this->session->userdata('pending_verify_email_user_id');
+
+        if ($user_id <= 0) {
+            $this->session->set_flashdata('error', 'Please create an account or log in first.');
+            redirect('auth/signup');
+            return;
+        }
+
+        $user = $this->auth->get_user_with_company($user_id);
+
+        if (!$user || $user['role'] === 'admin') {
+            $this->session->unset_userdata('pending_verify_email_user_id');
+            $this->session->set_flashdata('error', 'That verification request is no longer available.');
+            redirect('auth/login');
+            return;
+        }
+
+        if (!empty($user['email_verified_at'])) {
+            $this->session->unset_userdata('pending_verify_email_user_id');
+            $this->auth->update_last_login($user['id']);
+            $this->sign_in_user($user);
+            $this->session->set_flashdata('success', 'Your email address is already verified.');
+            $this->redirect_after_auth('profile');
+            return;
+        }
+
+        if ($this->input->method(TRUE) === 'POST') {
+            $action = trim((string) $this->input->post('verification_action', TRUE));
+
+            if ($action === 'resend') {
+                $delivery = $this->issue_email_verification($user);
+                $this->session->set_flashdata($delivery['success'] ? 'success' : 'error', $delivery['message']);
+                redirect('auth/verify_email');
+                return;
+            }
+
+            $this->form_validation->set_rules('verification_code', 'Verification code', 'trim|required|numeric|exact_length[6]');
+
+            if ($this->form_validation->run()) {
+                $result = $this->auth->verify_email_code(
+                    $user['id'],
+                    trim((string) $this->input->post('verification_code', TRUE))
+                );
+
+                if ($result === 'verified' || $result === 'already_verified') {
+                    $this->session->unset_userdata('pending_verify_email_user_id');
+                    $verified_user = $this->auth->get_user_with_company($user['id']);
+                    $this->auth->update_last_login($user['id']);
+                    $this->sign_in_user($verified_user);
+                    $this->session->set_flashdata('success', 'Your email address has been verified.');
+                    $this->redirect_after_auth('profile');
+                    return;
+                }
+
+                if ($result === 'expired') {
+                    $this->session->set_flashdata('error', 'That verification code has expired. Please request a new one.');
+                } else {
+                    $this->session->set_flashdata('error', 'The verification code is invalid.');
+                }
+
+                redirect('auth/verify_email');
+                return;
+            }
+        }
+
+        $this->render('auth/verify_email', array(
+            'title' => 'Verify Email',
+            'body_class' => 'auth-body auth-body-light',
+            'hide_footer' => TRUE,
+            'verification_email' => $user['email'],
+        ));
+    }
+
+    public function forgot_password()
+    {
+        $this->require_guest();
+
+        if ($this->input->method(TRUE) === 'POST') {
+            $this->form_validation->set_rules('email', 'Email', 'trim|required|valid_email');
+
+            if ($this->form_validation->run()) {
+                $email = strtolower(trim((string) $this->input->post('email', TRUE)));
+                $user = $this->auth->find_user_by_email($email);
+
+                if ($user && $user['role'] !== 'admin') {
+                    $delivery = $this->issue_password_reset($user);
+                    $this->session->set_userdata('pending_password_reset_user_id', (int) $user['id']);
+                    $this->session->set_flashdata($delivery['success'] ? 'success' : 'error', $delivery['message']);
+                    redirect('auth/reset_password');
+                    return;
+                }
+
+                $this->session->set_flashdata('success', 'If that email exists, we have sent a password reset code.');
+                redirect('auth/forgot_password');
+                return;
+            }
+        }
+
+        $this->render('auth/forgot_password', array(
+            'title' => 'Forgot Password',
+            'body_class' => 'auth-body auth-body-light',
+            'hide_footer' => TRUE,
+        ));
+    }
+
+    public function reset_password()
+    {
+        $this->require_guest();
+
+        $user_id = (int) $this->session->userdata('pending_password_reset_user_id');
+
+        if ($user_id <= 0) {
+            $this->session->set_flashdata('error', 'Please request a password reset first.');
+            redirect('auth/forgot_password');
+            return;
+        }
+
+        $user = $this->auth->get_user_with_company($user_id);
+
+        if (!$user || $user['role'] === 'admin') {
+            $this->session->unset_userdata('pending_password_reset_user_id');
+            $this->session->set_flashdata('error', 'That password reset request is no longer available.');
+            redirect('auth/forgot_password');
+            return;
+        }
+
+        if ($this->input->method(TRUE) === 'POST') {
+            $action = trim((string) $this->input->post('reset_action', TRUE));
+
+            if ($action === 'resend') {
+                $delivery = $this->issue_password_reset($user);
+                $this->session->set_flashdata($delivery['success'] ? 'success' : 'error', $delivery['message']);
+                redirect('auth/reset_password');
+                return;
+            }
+
+            $this->form_validation->set_rules('reset_code', 'Reset code', 'trim|required|numeric|exact_length[6]');
+            $this->form_validation->set_rules('password', 'Password', 'required|min_length[8]');
+            $this->form_validation->set_rules('password_confirm', 'Password confirmation', 'required|matches[password]');
+
+            if ($this->form_validation->run()) {
+                $result = $this->auth->reset_password_with_code(
+                    $user['id'],
+                    trim((string) $this->input->post('reset_code', TRUE)),
+                    $this->input->post('password', FALSE)
+                );
+
+                if ($result === 'reset') {
+                    $this->session->unset_userdata('pending_password_reset_user_id');
+                    $this->session->set_flashdata('success', 'Your password has been updated. You can sign in now.');
+                    redirect('auth/login');
+                    return;
+                }
+
+                if ($result === 'expired') {
+                    $this->session->set_flashdata('error', 'That reset code has expired. Please request a new one.');
+                } else {
+                    $this->session->set_flashdata('error', 'The reset code is invalid.');
+                }
+
+                redirect('auth/reset_password');
+                return;
+            }
+        }
+
+        $this->render('auth/reset_password', array(
+            'title' => 'Reset Password',
+            'body_class' => 'auth-body auth-body-light',
+            'hide_footer' => TRUE,
+            'reset_email' => $user['email'],
         ));
     }
 
@@ -243,18 +482,36 @@ class Auth extends MY_Controller
         $user = $this->auth->find_user_by_google_sub($google_profile['sub']);
 
         if (!$user) {
-            $user = $this->auth->find_user_by_email($google_profile['email']);
+            $user = $this->auth->find_user_by_email(strtolower($google_profile['email']));
 
             if ($user) {
+                if ($user['role'] === 'admin') {
+                    $this->session->set_flashdata('error', 'Admin accounts must sign in from the admin login page.');
+                    redirect('admin/login');
+                    return;
+                }
+
                 $this->auth->link_google_identity($user['id'], $google_profile['sub']);
                 $user = $this->auth->get_user_with_company($user['id']);
             }
         }
 
         if ($user) {
+            if ($user['role'] === 'admin') {
+                $this->session->set_flashdata('error', 'Admin accounts must sign in from the admin login page.');
+                redirect('admin/login');
+                return;
+            }
+
+            if (empty($user['email_verified_at'])) {
+                $this->auth->mark_email_verified($user['id']);
+                $user = $this->auth->get_user_with_company($user['id']);
+            }
+
             $this->session->unset_userdata('signup_draft');
             $this->session->unset_userdata('signup_google_profile');
             $this->sign_in_user($user);
+            $this->auth->update_last_login($user['id']);
             $this->session->set_flashdata('success', 'Signed in with Google.');
             $this->redirect_after_auth('profile');
             return;
@@ -264,7 +521,7 @@ class Auth extends MY_Controller
         $company_name = $names['first_name'] !== '' ? $names['first_name'] . ' Studio' : 'New Company';
 
         $this->session->set_userdata('signup_draft', array(
-            'email' => $google_profile['email'],
+            'email' => strtolower($google_profile['email']),
             'password' => bin2hex(random_bytes(16)),
             'auth_provider' => 'google',
             'google_sub' => $google_profile['sub'],
@@ -272,7 +529,7 @@ class Auth extends MY_Controller
         $this->session->set_userdata('signup_google_profile', array(
             'full_name' => !empty($google_profile['name']) ? $google_profile['name'] : trim($names['first_name'] . ' ' . $names['last_name']),
             'company_name' => $company_name,
-            'email' => $google_profile['email'],
+            'email' => strtolower($google_profile['email']),
         ));
 
         redirect('auth/signup/details');
@@ -283,6 +540,8 @@ class Auth extends MY_Controller
         $this->session->unset_userdata('signup_draft');
         $this->session->unset_userdata('signup_google_profile');
         $this->session->unset_userdata('google_oauth_state');
+        $this->session->unset_userdata('pending_verify_email_user_id');
+        $this->session->unset_userdata('pending_password_reset_user_id');
         $this->sign_out_user();
         $this->session->set_flashdata('success', 'You have been logged out.');
         redirect('auth/login');
@@ -386,6 +645,119 @@ class Auth extends MY_Controller
             'first_name' => $first_name,
             'last_name' => $last_name,
         );
+    }
+
+    protected function issue_email_verification($user)
+    {
+        $code = $this->generate_one_time_code();
+        $expires_at = date('Y-m-d H:i:s', time() + 10 * 60);
+        $this->auth->store_email_verification_code($user['id'], $code, $expires_at);
+
+        $delivery = $this->send_auth_code_email(
+            $user['email'],
+            'Verify your KinoBlick account',
+            array(
+                'Use the verification code below to activate your KinoBlick account.',
+                'If you did not request this, you can ignore this email.',
+            ),
+            $code,
+            10
+        );
+
+        if ($delivery['success']) {
+            $message = 'We sent a verification code to ' . $user['email'] . '.';
+            if ($delivery['used_fallback']) {
+                $message .= ' Development code: ' . $code . '.';
+            }
+
+            return array('success' => TRUE, 'message' => $message);
+        }
+
+        return array(
+            'success' => FALSE,
+            'message' => 'We could not send the verification email right now. Please try again.',
+        );
+    }
+
+    protected function issue_password_reset($user)
+    {
+        $code = $this->generate_one_time_code();
+        $expires_at = date('Y-m-d H:i:s', time() + 15 * 60);
+        $this->auth->store_password_reset_code($user['id'], $code, $expires_at);
+
+        $delivery = $this->send_auth_code_email(
+            $user['email'],
+            'Reset your KinoBlick password',
+            array(
+                'Use the code below to reset your KinoBlick password.',
+                'If you did not request this, you can ignore this email.',
+            ),
+            $code,
+            15
+        );
+
+        if ($delivery['success']) {
+            $message = 'We sent a password reset code to ' . $user['email'] . '.';
+            if ($delivery['used_fallback']) {
+                $message .= ' Development code: ' . $code . '.';
+            }
+
+            return array('success' => TRUE, 'message' => $message);
+        }
+
+        return array(
+            'success' => FALSE,
+            'message' => 'We could not send the password reset email right now. Please try again.',
+        );
+    }
+
+    protected function send_auth_code_email($to_email, $subject, $intro_lines, $code, $minutes_valid)
+    {
+        $this->load->library('email');
+        $this->email->clear(TRUE);
+        $this->email->initialize(array(
+            'mailtype' => 'text',
+            'charset' => 'utf-8',
+            'newline' => "\r\n",
+            'crlf' => "\r\n",
+        ));
+        $this->email->from('no-reply@kinoblick.local', 'KinoBlick');
+        $this->email->to($to_email);
+        $this->email->subject($subject);
+        $this->email->message(
+            implode("\n\n", array_merge((array) $intro_lines, array(
+                'Code: ' . $code,
+                'This code expires in ' . (int) $minutes_valid . ' minutes.',
+            )))
+        );
+
+        if ($this->email->send()) {
+            return array(
+                'success' => TRUE,
+                'used_fallback' => FALSE,
+            );
+        }
+
+        log_message('error', 'Auth email delivery failed for ' . $to_email . ': ' . $this->email->print_debugger(array('headers')));
+
+        if (defined('ENVIRONMENT') && ENVIRONMENT !== 'production') {
+            log_message('debug', 'Auth email fallback code for ' . $to_email . ': ' . $code);
+
+            return array(
+                'success' => TRUE,
+                'used_fallback' => TRUE,
+            );
+        }
+
+        return array(
+            'success' => FALSE,
+            'used_fallback' => FALSE,
+        );
+    }
+
+    protected function generate_one_time_code()
+    {
+        return str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
     }
 
     protected function redirect_after_auth($default)

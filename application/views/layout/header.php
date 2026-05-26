@@ -15,6 +15,7 @@
     $cart_url = !empty($has_multi_cart)
         ? site_url('booking/cart')
         : (!empty($has_checkout_draft) ? site_url('booking/checkout') : site_url('booking'));
+    $cart_item_count = isset($cart_item_count) ? (int) $cart_item_count : 0;
     ?>
     <header class="site-header">
         <div class="content-shell header-shell">
@@ -43,6 +44,7 @@
                             </svg>
                         </span>
                         View Cart
+                        <span class="header-cart-badge"><?php echo $cart_item_count; ?></span>
                     </a>
                 <?php else: ?>
                     <a class="header-link" href="<?php echo site_url('auth/login'); ?>">Log in</a>
@@ -55,6 +57,7 @@
                             </svg>
                         </span>
                         View Cart
+                        <span class="header-cart-badge"><?php echo $cart_item_count; ?></span>
                     </a>
                 <?php endif; ?>
             </div>

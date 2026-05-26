@@ -85,6 +85,22 @@
 
                     <section class="checkout-card">
                         <div class="checkout-card-head">
+                            <h2>Add Coupon <small>(Optional)</small></h2>
+                        </div>
+
+                        <form action="<?php echo site_url('booking/checkout'); ?>" method="post" class="checkout-inline-form">
+                            <input type="hidden" name="form_action" value="coupon">
+                            <input type="text" name="coupon_code" value="<?php echo html_escape($checkout_draft['coupon_code'] ?? ''); ?>" placeholder="Use SAVE10 or SAVE100">
+                            <button type="submit" class="light-button">Apply Coupon</button>
+                        </form>
+
+                        <?php if (!empty($checkout_summary['coupon_code'])): ?>
+                            <p class="checkout-muted">Applied coupon: <strong><?php echo html_escape($checkout_summary['coupon_code']); ?></strong> (<?php echo html_escape($checkout_summary['coupon_label']); ?>)</p>
+                        <?php endif; ?>
+                    </section>
+
+                    <section class="checkout-card">
+                        <div class="checkout-card-head">
                             <h2>Payment Plan</h2>
                         </div>
 
@@ -130,7 +146,7 @@
                                 <div><dt>FSK Exam Fee</dt><dd><?php echo $checkout_summary['currency']; ?> <?php echo number_format($checkout_summary['custom_start_fee'], 2); ?></dd></div>
                             <?php endif; ?>
                             <?php if ($checkout_summary['coupon_discount'] > 0): ?>
-                                <div><dt>Coupon Discount</dt><dd>-<?php echo $checkout_summary['currency']; ?> <?php echo number_format($checkout_summary['coupon_discount'], 2); ?></dd></div>
+                                <div><dt>Coupon Discount<?php if (!empty($checkout_summary['coupon_code'])): ?> (<?php echo html_escape($checkout_summary['coupon_code']); ?>)<?php endif; ?></dt><dd>-<?php echo $checkout_summary['currency']; ?> <?php echo number_format($checkout_summary['coupon_discount'], 2); ?></dd></div>
                             <?php endif; ?>
                             <div><dt>Subtotal</dt><dd><?php echo $checkout_summary['currency']; ?> <?php echo number_format($checkout_summary['subtotal'], 2); ?></dd></div>
                             <div><dt>VAT (19%)</dt><dd><?php echo $checkout_summary['currency']; ?> <?php echo number_format($checkout_summary['vat'], 2); ?></dd></div>

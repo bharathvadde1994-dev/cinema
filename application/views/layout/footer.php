@@ -3,7 +3,7 @@
         <div class="content-shell footer-shell">
             <div class="footer-branding">
                 <a class="brand-mark footer-brand-mark" href="<?php echo site_url(''); ?>" aria-label="KinoBlick home">
-                    <img src="<?php echo base_url('assets/Images/logo.png'); ?>" alt="KinoBlick">
+                    <img src="<?php echo base_url('assets/Images/logo_white.png'); ?>" alt="KinoBlick">
                 </a>
                 <p>
                     The premier platform for local businesses to book cinema advertising slots instantly across Germany.

@@ -53,6 +53,21 @@ class MY_Controller extends CI_Controller
         return $this->get_current_user() !== NULL;
     }
 
+    protected function get_authenticated_role()
+    {
+        return (string) $this->session->userdata('auth_role');
+    }
+
+    protected function is_admin_user()
+    {
+        return $this->is_authenticated() && $this->get_authenticated_role() === 'admin';
+    }
+
+    protected function is_advertiser_user()
+    {
+        return $this->is_authenticated() && $this->get_authenticated_role() === 'advertiser';
+    }
+
     protected function require_auth()
     {
         if (!$this->is_authenticated()) {
@@ -62,10 +77,35 @@ class MY_Controller extends CI_Controller
         }
     }
 
+    protected function require_advertiser_auth()
+    {
+        if ($this->is_advertiser_user()) {
+            return;
+        }
+
+        if ($this->is_admin_user()) {
+            $this->session->set_flashdata('error', 'Admin accounts must use the admin portal.');
+            redirect('admin/bookings');
+            exit;
+        }
+
+        $this->session->set_flashdata('error', 'Please log in to continue.');
+        redirect('auth/login');
+        exit;
+    }
+
     protected function require_guest()
     {
         if ($this->is_authenticated()) {
-            redirect('profile');
+            redirect($this->is_admin_user() ? 'admin/bookings' : 'profile');
+            exit;
+        }
+    }
+
+    protected function redirect_admin_to_portal()
+    {
+        if ($this->is_admin_user()) {
+            redirect('admin/bookings');
             exit;
         }
     }
@@ -95,9 +135,12 @@ class MY_Controller extends CI_Controller
     protected function render($view, $data = array())
     {
         $multi_cart = $this->session->userdata('multi_booking_cart');
+        $checkout_draft = $this->session->userdata('checkout_draft');
         $has_multi_cart = is_array($multi_cart)
             && !empty($multi_cart['items'])
             && is_array($multi_cart['items']);
+        $has_checkout_draft = is_array($checkout_draft) && !empty($checkout_draft['cinema_slug']);
+        $cart_item_count = $has_multi_cart ? count($multi_cart['items']) : ($has_checkout_draft ? 1 : 0);
 
         $defaults = array(
             'title' => 'KinoBlick',
@@ -105,8 +148,9 @@ class MY_Controller extends CI_Controller
             'auth_user' => $this->get_current_user(),
             'is_authenticated' => $this->is_authenticated(),
             'auth_role' => $this->session->userdata('auth_role'),
-            'has_checkout_draft' => !empty($this->session->userdata('checkout_draft')),
+            'has_checkout_draft' => $has_checkout_draft,
             'has_multi_cart' => $has_multi_cart,
+            'cart_item_count' => $cart_item_count,
             'flash_error' => $this->session->flashdata('error'),
             'flash_success' => $this->session->flashdata('success'),
             'hide_footer' => FALSE,

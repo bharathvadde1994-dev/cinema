@@ -62,6 +62,11 @@ CREATE TABLE `users` (
   `google_sub` VARCHAR(120) DEFAULT NULL,
   `email` VARCHAR(150) NOT NULL,
   `password_hash` VARCHAR(255) NOT NULL,
+  `email_verified_at` DATETIME DEFAULT NULL,
+  `email_verification_code_hash` VARCHAR(255) DEFAULT NULL,
+  `email_verification_expires_at` DATETIME DEFAULT NULL,
+  `password_reset_code_hash` VARCHAR(255) DEFAULT NULL,
+  `password_reset_expires_at` DATETIME DEFAULT NULL,
   `phone` VARCHAR(50) DEFAULT NULL,
   `status` ENUM('active', 'inactive', 'suspended') NOT NULL DEFAULT 'active',
   `last_login_at` DATETIME DEFAULT NULL,
@@ -334,11 +339,11 @@ VALUES
 
 -- Local admin login for development: admin@kinoblick.test / Admin@12345
 INSERT INTO `users`
-(`id`, `company_id`, `role`, `first_name`, `last_name`, `email`, `password_hash`, `phone`, `status`)
+(`id`, `company_id`, `role`, `first_name`, `last_name`, `email`, `password_hash`, `email_verified_at`, `phone`, `status`)
 VALUES
-(1, NULL, 'admin', 'Cinema', 'Admin', 'admin@kinoblick.test', '$2y$10$Hy0V9hXtBGUDyEUrJgHZTuyjXO8XxvPOF.ZHW7skpWdzrNT6qh88G', '+49 30 555000', 'active'),
-(2, 1, 'advertiser', 'Nina', 'Keller', 'nina@novamobility.test', '$2y$10$hpI/fS1cFwAE0Wa/VDQgHe/L82DQ1nUV6QS0AFUcwV/P34a6g2HH.', '+49 30 555111', 'active'),
-(3, 2, 'advertiser', 'Jonas', 'Fischer', 'jonas@freshmarket.test', '$2y$10$hpI/fS1cFwAE0Wa/VDQgHe/L82DQ1nUV6QS0AFUcwV/P34a6g2HH.', '+49 40 555222', 'active');
+(1, NULL, 'admin', 'Cinema', 'Admin', 'admin@kinoblick.test', '$2y$10$Hy0V9hXtBGUDyEUrJgHZTuyjXO8XxvPOF.ZHW7skpWdzrNT6qh88G', '2026-05-21 00:00:00', '+49 30 555000', 'active'),
+(2, 1, 'advertiser', 'Nina', 'Keller', 'nina@novamobility.test', '$2y$10$hpI/fS1cFwAE0Wa/VDQgHe/L82DQ1nUV6QS0AFUcwV/P34a6g2HH.', '2026-05-21 00:00:00', '+49 30 555111', 'active'),
+(3, 2, 'advertiser', 'Jonas', 'Fischer', 'jonas@freshmarket.test', '$2y$10$hpI/fS1cFwAE0Wa/VDQgHe/L82DQ1nUV6QS0AFUcwV/P34a6g2HH.', '2026-05-21 00:00:00', '+49 40 555222', 'active');
 
 INSERT INTO `cinemas`
 (`id`, `name`, `slug`, `city`, `region`, `country`, `address_line`, `postal_code`, `latitude`, `longitude`, `monthly_reach`, `description`, `status`)

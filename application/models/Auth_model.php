@@ -3,6 +3,14 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Auth_model extends CI_Model
 {
+    protected $auth_schema_checked = FALSE;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->ensure_auth_schema();
+    }
+
     public function get_user_with_company($user_id)
     {
         return $this->db
@@ -40,6 +48,7 @@ class Auth_model extends CI_Model
 
     public function verify_credentials($email, $password)
     {
+        $this->ensure_auth_schema();
         $user = $this->find_user_by_email($email);
 
         if (!$user || $user['status'] !== 'active') {
@@ -50,15 +59,14 @@ class Auth_model extends CI_Model
             return NULL;
         }
 
-        $this->db->where('id', (int) $user['id'])->update('users', array(
-            'last_login_at' => date('Y-m-d H:i:s'),
-        ));
+        $this->update_last_login($user['id']);
 
         return $this->get_user_with_company($user['id']);
     }
 
     public function create_advertiser_account($data)
     {
+        $this->ensure_auth_schema();
         $this->db->trans_start();
 
         $company = array(
@@ -95,7 +103,8 @@ class Auth_model extends CI_Model
             'email' => $data['email'],
             'password_hash' => password_hash($data['password'], PASSWORD_DEFAULT),
             'phone' => $data['phone'],
-            'status' => 'active',
+            'status' => isset($data['status']) ? $data['status'] : 'active',
+            'email_verified_at' => isset($data['email_verified_at']) ? $data['email_verified_at'] : NULL,
         );
 
         $this->db->insert('users', $user);
@@ -108,6 +117,132 @@ class Auth_model extends CI_Model
         }
 
         return $this->get_user_with_company($user_id);
+    }
+
+    public function update_last_login($user_id)
+    {
+        $this->ensure_auth_schema();
+        return $this->db
+            ->where('id', (int) $user_id)
+            ->update('users', array(
+                'last_login_at' => date('Y-m-d H:i:s'),
+            ));
+    }
+
+    public function store_email_verification_code($user_id, $code, $expires_at)
+    {
+        $this->ensure_auth_schema();
+        return $this->db
+            ->where('id', (int) $user_id)
+            ->update('users', array(
+                'email_verification_code_hash' => password_hash($code, PASSWORD_DEFAULT),
+                'email_verification_expires_at' => $expires_at,
+            ));
+    }
+
+    public function verify_email_code($user_id, $code)
+    {
+        $this->ensure_auth_schema();
+        $user = $this->db
+            ->select('id, status, email_verified_at, email_verification_code_hash, email_verification_expires_at')
+            ->from('users')
+            ->where('id', (int) $user_id)
+            ->limit(1)
+            ->get()
+            ->row_array();
+
+        if (!$user) {
+            return 'missing';
+        }
+
+        if (!empty($user['email_verified_at'])) {
+            return 'already_verified';
+        }
+
+        if (empty($user['email_verification_code_hash']) || empty($user['email_verification_expires_at'])) {
+            return 'missing';
+        }
+
+        if (strtotime($user['email_verification_expires_at']) < time()) {
+            return 'expired';
+        }
+
+        if (!password_verify($code, $user['email_verification_code_hash'])) {
+            return 'invalid';
+        }
+
+        $this->db
+            ->where('id', (int) $user_id)
+            ->update('users', array(
+                'status' => 'active',
+                'email_verified_at' => date('Y-m-d H:i:s'),
+                'email_verification_code_hash' => NULL,
+                'email_verification_expires_at' => NULL,
+            ));
+
+        return $this->db->affected_rows() >= 0 ? 'verified' : 'invalid';
+    }
+
+    public function mark_email_verified($user_id)
+    {
+        $this->ensure_auth_schema();
+        return $this->db
+            ->where('id', (int) $user_id)
+            ->update('users', array(
+                'status' => 'active',
+                'email_verified_at' => date('Y-m-d H:i:s'),
+                'email_verification_code_hash' => NULL,
+                'email_verification_expires_at' => NULL,
+            ));
+    }
+
+    public function store_password_reset_code($user_id, $code, $expires_at)
+    {
+        $this->ensure_auth_schema();
+        return $this->db
+            ->where('id', (int) $user_id)
+            ->update('users', array(
+                'password_reset_code_hash' => password_hash($code, PASSWORD_DEFAULT),
+                'password_reset_expires_at' => $expires_at,
+            ));
+    }
+
+    public function reset_password_with_code($user_id, $code, $new_password)
+    {
+        $this->ensure_auth_schema();
+        $user = $this->db
+            ->select('id, password_reset_code_hash, password_reset_expires_at')
+            ->from('users')
+            ->where('id', (int) $user_id)
+            ->limit(1)
+            ->get()
+            ->row_array();
+
+        if (!$user) {
+            return 'missing';
+        }
+
+        if (empty($user['password_reset_code_hash']) || empty($user['password_reset_expires_at'])) {
+            return 'missing';
+        }
+
+        if (strtotime($user['password_reset_expires_at']) < time()) {
+            return 'expired';
+        }
+
+        if (!password_verify($code, $user['password_reset_code_hash'])) {
+            return 'invalid';
+        }
+
+        $this->db
+            ->where('id', (int) $user_id)
+            ->update('users', array(
+                'password_hash' => password_hash($new_password, PASSWORD_DEFAULT),
+                'password_reset_code_hash' => NULL,
+                'password_reset_expires_at' => NULL,
+            ));
+
+        return $this->db->affected_rows() >= 0 ? 'reset' : 'invalid';
     }
 
     public function get_user_bookings($user_id)
@@ -167,6 +302,7 @@ class Auth_model extends CI_Model
 
     public function find_or_create_google_user($email)
     {
+        $this->ensure_auth_schema();
         $existing = $this->find_user_by_email($email);
 
         if ($existing) {
@@ -194,5 +330,32 @@ class Auth_model extends CI_Model
             'vat_number' => '',
             'password' => bin2hex(random_bytes(8)),
         ));
+    }
+
+    protected function ensure_auth_schema()
+    {
+        if ($this->auth_schema_checked) {
+            return;
+        }
+
+        $columns_to_add = array(
+            'email_verified_at' => "ALTER TABLE `users` ADD COLUMN `email_verified_at` DATETIME DEFAULT NULL AFTER `password_hash`",
+            'email_verification_code_hash' => "ALTER TABLE `users` ADD COLUMN `email_verification_code_hash` VARCHAR(255) DEFAULT NULL AFTER `email_verified_at`",
+            'email_verification_expires_at' => "ALTER TABLE `users` ADD COLUMN `email_verification_expires_at` DATETIME DEFAULT NULL AFTER `email_verification_code_hash`",
+            'password_reset_code_hash' => "ALTER TABLE `users` ADD COLUMN `password_reset_code_hash` VARCHAR(255) DEFAULT NULL AFTER `email_verification_expires_at`",
+            'password_reset_expires_at' => "ALTER TABLE `users` ADD COLUMN `password_reset_expires_at` DATETIME DEFAULT NULL AFTER `password_reset_code_hash`",
+        );
+
+        foreach ($columns_to_add as $column => $sql) {
+            if (!$this->db->field_exists($column, 'users')) {
+                $this->db->query($sql);
+            }
+        }
+
+        if ($this->db->field_exists('email_verified_at', 'users')) {
+            $this->db->query("UPDATE `users` SET `email_verified_at` = COALESCE(`email_verified_at`, NOW()) WHERE `role` IN ('admin', 'advertiser') AND `status` = 'active'");
+        }
+
+        $this->auth_schema_checked = TRUE;
     }
 }

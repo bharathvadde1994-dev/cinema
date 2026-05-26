@@ -5,6 +5,8 @@ class Welcome extends MY_Controller
 {
     public function index()
     {
+        $this->redirect_admin_to_portal();
+
         $home = $this->demo->get_home_data();
 
         $this->render('home', array(

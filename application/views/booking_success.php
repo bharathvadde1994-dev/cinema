@@ -8,6 +8,8 @@
     $base_rate = isset($summary['base_rate']) ? (float) $summary['base_rate'] : (float) $booking_record['subtotal_amount'];
     $processing_fee = isset($summary['processing_fee']) ? (float) $summary['processing_fee'] : 0.00;
     $custom_start_fee = isset($summary['custom_start_fee']) ? (float) $summary['custom_start_fee'] : 0.00;
+    $coupon_discount = isset($summary['coupon_discount']) ? (float) $summary['coupon_discount'] : (float) $booking_record['discount_amount'];
+    $coupon_code = isset($summary['coupon_code']) ? (string) $summary['coupon_code'] : '';
     $vat = isset($summary['vat']) ? (float) $summary['vat'] : (float) $booking_record['tax_amount'];
     ?>
 
@@ -67,6 +69,7 @@
                         <?php if ($is_monthly): ?><div><dt>Payment</dt><dd>Monthly</dd></div><?php endif; ?>
                         <div><dt>Processing Fee (5%)</dt><dd><?php echo $currency; ?><?php echo number_format($processing_fee, 2); ?></dd></div>
                         <?php if ($custom_start_fee > 0): ?><div><dt>FSK Exam Fee</dt><dd><?php echo $currency; ?><?php echo number_format($custom_start_fee, 2); ?></dd></div><?php endif; ?>
+                        <?php if ($coupon_discount > 0): ?><div><dt>Coupon Discount<?php if ($coupon_code !== ''): ?> (<?php echo html_escape($coupon_code); ?>)<?php endif; ?></dt><dd>-<?php echo $currency; ?><?php echo number_format($coupon_discount, 2); ?></dd></div><?php endif; ?>
                         <div><dt>VAT (19%)</dt><dd><?php echo $currency; ?><?php echo number_format($vat, 2); ?></dd></div>
                     </dl>
                     <div class="booking-success-total"><span>Total</span><strong><?php echo $currency; ?><?php echo number_format((float) $booking_record['grand_total'], 2); ?></strong></div>

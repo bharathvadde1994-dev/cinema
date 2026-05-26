@@ -8,6 +8,7 @@ class Booking extends MY_Controller
         parent::__construct();
         $this->load->model('Cinema_model', 'cinema');
         $this->load->model('Booking_model', 'booking_store');
+        $this->redirect_admin_to_portal();
     }
 
     public function index()
@@ -223,6 +224,12 @@ class Booking extends MY_Controller
             return;
         }
 
+        if (!$this->is_advertiser_user()) {
+            $this->session->set_flashdata('error', 'Admin accounts cannot place bookings from the customer portal.');
+            redirect('admin/bookings');
+            return;
+        }
+
         $cart = $this->get_multi_cart();
 
         if (!empty($cart['items'])) {
@@ -234,7 +241,7 @@ class Booking extends MY_Controller
 
     public function details($reference = '')
     {
-        $this->require_auth();
+        $this->require_advertiser_auth();
 
         $booking = $this->booking_store->get_booking_by_reference($reference, $this->get_current_user()['id']);
 
@@ -264,7 +271,7 @@ class Booking extends MY_Controller
 
     public function upload($reference = '')
     {
-        $this->require_auth();
+        $this->require_advertiser_auth();
 
         $booking = $this->booking_store->get_booking_by_reference($reference, $this->get_current_user()['id']);
 
@@ -637,15 +644,9 @@ class Booking extends MY_Controller
 
         $processing_fee = round($base_rate * 0.05, 2);
         $custom_start_fee = 250.00;
-        $coupon_discount = 0.00;
-
-        if (!empty($draft['coupon_code'])) {
-            $coupon_discount = strtoupper($draft['coupon_code']) === 'SAVE100'
-                ? 100.00
-                : min(150.00, round($base_rate * 0.03, 2));
-        }
-
-        $subtotal = max(0, $base_rate + $processing_fee + $custom_start_fee - $coupon_discount);
+        $discountable_total = $base_rate + $processing_fee + $custom_start_fee;
+        $coupon = $this->resolve_coupon($draft['coupon_code'] ?? '', $discountable_total);
+        $subtotal = max(0, $discountable_total - $coupon['discount_amount']);
         $vat = round($subtotal * 0.19, 2);
         $grand_total = $subtotal + $vat;
 
@@ -654,7 +655,9 @@ class Booking extends MY_Controller
             'base_rate' => $base_rate,
             'processing_fee' => $processing_fee,
             'custom_start_fee' => $custom_start_fee,
-            'coupon_discount' => $coupon_discount,
+            'coupon_code' => $coupon['code'],
+            'coupon_label' => $coupon['label'],
+            'coupon_discount' => $coupon['discount_amount'],
             'subtotal' => $subtotal,
             'vat' => $vat,
             'grand_total' => $grand_total,
@@ -663,6 +666,56 @@ class Booking extends MY_Controller
             'max_duration_months' => $max_duration,
             'spot_length_label' => count(array_unique($spot_lengths)) === 1 ? $spot_lengths[0] . ' sec' : 'Mixed',
         );
+    }
+
+    protected function get_available_coupons()
+    {
+        return array(
+            'SAVE10' => array(
+                'code' => 'SAVE10',
+                'label' => '10% off',
+                'type' => 'percent',
+                'value' => 10,
+            ),
+            'SAVE100' => array(
+                'code' => 'SAVE100',
+                'label' => '100 USD off',
+                'type' => 'fixed',
+                'value' => 100.00,
+            ),
+        );
+    }
+
+    protected function resolve_coupon($coupon_code, $discountable_total)
+    {
+        $normalized_code = strtoupper(trim((string) $coupon_code));
+        $coupons = $this->get_available_coupons();
+
+        if ($normalized_code === '' || !isset($coupons[$normalized_code])) {
+            return array(
+                'code' => '',
+                'label' => '',
+                'type' => '',
+                'value' => 0,
+                'discount_amount' => 0.00,
+                'is_valid' => FALSE,
+            );
+        }
+
+        $coupon = $coupons[$normalized_code];
+        $discountable_total = max(0, (float) $discountable_total);
+        $discount_amount = 0.00;
+
+        if ($coupon['type'] === 'percent') {
+            $discount_amount = round($discountable_total * ((float) $coupon['value'] / 100), 2);
+        } elseif ($coupon['type'] === 'fixed') {
+            $discount_amount = min($discountable_total, (float) $coupon['value']);
+        }
+
+        $coupon['discount_amount'] = $discount_amount;
+        $coupon['is_valid'] = TRUE;
+
+        return $coupon;
     }
 
     protected function apply_checkout_post($draft)
@@ -699,8 +752,18 @@ class Booking extends MY_Controller
                 $this->session->set_flashdata('success', 'Delivery address saved.');
             }
         } elseif ($action === 'coupon') {
-            $draft['coupon_code'] = strtoupper(trim((string) $this->input->post('coupon_code', TRUE)));
-            $this->session->set_flashdata('success', $draft['coupon_code'] !== '' ? 'Coupon code applied.' : 'Coupon code cleared.');
+            $coupon_code = strtoupper(trim((string) $this->input->post('coupon_code', TRUE)));
+            $coupon = $this->resolve_coupon($coupon_code, 1);
+
+            if ($coupon_code === '') {
+                $draft['coupon_code'] = '';
+                $this->session->set_flashdata('success', 'Coupon code cleared.');
+            } elseif ($coupon['is_valid']) {
+                $draft['coupon_code'] = $coupon['code'];
+                $this->session->set_flashdata('success', $coupon['code'] . ' applied: ' . $coupon['label'] . '.');
+            } else {
+                $this->session->set_flashdata('error', 'Invalid coupon code. Use SAVE10 or SAVE100.');
+            }
         } elseif ($action === 'payment') {
             $card_number = preg_replace('/\D+/', '', (string) $this->input->post('card_number', TRUE));
             $draft['payment_details'] = array(
@@ -744,11 +807,25 @@ class Booking extends MY_Controller
     protected function get_checkout_draft()
     {
         $draft = $this->session->userdata('checkout_draft');
-        return is_array($draft) ? $draft : array();
+        if (!is_array($draft)) {
+            return array();
+        }
+
+        if (!empty($draft['coupon_code'])) {
+            $coupon = $this->resolve_coupon($draft['coupon_code'], 1);
+            $draft['coupon_code'] = $coupon['is_valid'] ? $coupon['code'] : '';
+        }
+
+        return $draft;
     }
 
     protected function save_checkout_draft($draft)
     {
+        if (!empty($draft['coupon_code'])) {
+            $coupon = $this->resolve_coupon($draft['coupon_code'], 1);
+            $draft['coupon_code'] = $coupon['is_valid'] ? $coupon['code'] : '';
+        }
+
         $this->session->set_userdata('checkout_draft', $draft);
     }
 
@@ -831,15 +908,9 @@ class Booking extends MY_Controller
         $base_rate = (float) $draft['estimated_total'];
         $processing_fee = 150.00;
         $custom_start_fee = strtolower((string) $draft['start_month']) === 'custom' ? 50.00 : 0.00;
-        $coupon_discount = 0.00;
-
-        if (!empty($draft['coupon_code'])) {
-            $coupon_discount = strtoupper($draft['coupon_code']) === 'SAVE100'
-                ? 100.00
-                : min(75.00, round($base_rate * 0.03, 2));
-        }
-
-        $subtotal = max(0, $base_rate + $processing_fee + $custom_start_fee - $coupon_discount);
+        $discountable_total = $base_rate + $processing_fee + $custom_start_fee;
+        $coupon = $this->resolve_coupon($draft['coupon_code'] ?? '', $discountable_total);
+        $subtotal = max(0, $discountable_total - $coupon['discount_amount']);
         $vat = round($subtotal * 0.19, 2);
         $grand_total = $subtotal + $vat;
 
@@ -848,7 +919,9 @@ class Booking extends MY_Controller
             'base_rate' => $base_rate,
             'processing_fee' => $processing_fee,
             'custom_start_fee' => $custom_start_fee,
-            'coupon_discount' => $coupon_discount,
+            'coupon_code' => $coupon['code'],
+            'coupon_label' => $coupon['label'],
+            'coupon_discount' => $coupon['discount_amount'],
             'subtotal' => $subtotal,
             'vat' => $vat,
             'grand_total' => $grand_total,
